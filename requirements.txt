@@ -1,0 +1,4 @@
+docspec
+docspec-python
+pytest
+pyyaml
