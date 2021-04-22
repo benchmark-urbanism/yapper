@@ -1,6 +1,6 @@
 # Yapper
 
-Yapper converts Python docstrings to `markdown` for use by static site generators. It uses the [`docspec`](https://github.com/NiklasRosenstein/docspec).
+Yapper converts Python docstrings to `markdown` for use by static site generators. It uses the [`docspec`](https://github.com/NiklasRosenstein/docspec) package to read python files.
 - It is based on a simple-as-possible configuration file. These configuration parameters can be set to control selected styling and component templates for subsequent interpretation by downstream static site-generators.
 - Linting and any other markdown processing is left to downstream workflows; for example, most IDEs have built-in linting and, if using the `markdown` for a static site generator, then any linting, linking, footnoting, emoticons, etc. can be handled by the respective `markdown` ecosystem. e.g. `remark` [plugins](https://github.com/remarkjs/remark/blob/main/doc/plugins.md) or similar.
 
