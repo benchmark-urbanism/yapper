@@ -141,7 +141,7 @@ Another *test* _param_.
 
 Many or most static site generators make use of javascript and the related ecosystem available from `npm` / `yarn` package managers.
 
-As such, you may want to invoke `yapper` from a `package.json` file when building your documentation. This can be done with the help of `python-shell`. For example:
+As such, you may want to invoke `yapper` from a `package.json` file when building your documentation for development. This can be done with the help of `python-shell`. For example:
 
 ```js
 const path = require('path')
@@ -150,18 +150,15 @@ const { PythonShell } = require('python-shell')
 const options = {
   mode: 'text',
   pythonOptions: ['-u'],
-  // make sure you use an absolute path for scriptPath
+  pythonPath: path.resolve(__dirname, '../venv/bin/python'),
   scriptPath: path.resolve(__dirname, '../venv/lib/python3.9/site-packages/yapper'),
-  args: ['--config', './.yap_config.yaml'],
-}
-
-if (!process.env.CI) {
-  options['pythonPath'] = path.resolve(__dirname, '../venv/bin/python')
+  args: ['--config', '../.yap_config.yaml'],
 }
 
 PythonShell.run('__init__.py', options, function (err) {
   if (err) throw err
 })
+
 ```
 
 `yapper` can then be invoked from `node` or the `package.json` file's scripts parameter, and can be coupled to other steps such as linting or validation, e.g.
