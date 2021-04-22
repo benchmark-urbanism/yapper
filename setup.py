@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='yapper',
-    version='0.0.1b2',
+    version='0.0.1b3',
     packages=find_packages(),
     scripts=['yapper/__init__.py'],
     entry_points={
