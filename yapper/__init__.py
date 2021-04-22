@@ -1,12 +1,4 @@
-"""
-Uses docspec to parse docstrings to markdown.
-
-Intended for use with static site generators where further linting / linking / styling is done downstream.
-
-Loosely based on Numpy-style docstrings.
-
-Automatically infers types from signature typehints. Explicitly documented types are NOT supported in docstrings.
-"""
+#!python
 import argparse
 import logging
 from pathlib import Path
@@ -100,9 +92,8 @@ def main(yap_config: dict) -> None:
                     out_file.write(line)
 
 
-if __name__ == '__main__':
+def cli():
     args = arg_parser.parse_args()
     config_file = load_config(args)
     yap_config = process_config(config_file)
-    # call main function
     main(yap_config)
