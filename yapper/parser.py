@@ -10,7 +10,8 @@ Automatically infers types from signature typehints. Explicitly documented types
 import logging
 
 import docspec
-8
+import docspec_python
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -235,7 +236,9 @@ def process_member(member, lines, config, class_name=None):
             pass
 
 
-def parse(module_name, module, config):
+def parse(module_name: str,
+          module: docspec_python.Module,
+          config: dict):
     lines = []
     # frontmatter
     if config['frontmatter_template'] is not None:
@@ -262,6 +265,3 @@ def parse(module_name, module, config):
             for nested_member in member.members:
                 process_member(nested_member, lines, config, class_name)
     return lines
-
-
-logger.info('Done parsing python to markdown.')

@@ -29,6 +29,7 @@ arg_parser.add_argument('--config',
                         required=False)
 # template configs
 yap_template_config = {
+    'package_root_relative_path': '.',
     'frontmatter_template': None,
     'module_name_template': '# {module_name}\n\n',
     'toc_template': None,
@@ -38,21 +39,12 @@ yap_template_config = {
     'signature_template': '\n\n```py\n{signature}\n```\n\n',
     'heading_template': '\n\n#### {heading}\n\n',
     'param_template': '\n\n**{name}** _{type}_: {description}\n\n',
-    'return_template': '\n\n**{name}**: {description}\n\n'
+    'return_template': '\n\n**{name}**: {description}\n\n',
+    'module_map': None
 }
 
 
 def load_config(args: argparse.Namespace) -> dict:
-    """
-
-    Parameters
-    ----------
-    args
-
-    Returns
-    -------
-    config_file
-    """
     logger.info('Parsing config.')
     file_name = None
     if hasattr(args, 'config'):
@@ -62,45 +54,30 @@ def load_config(args: argparse.Namespace) -> dict:
             fp = Path(Path.cwd() / name)
             if fp.exists():
                 file_name = name
+                break
     if file_name is None or not Path(Path.cwd() / file_name).exists():
         raise ValueError('Yapper requires either a "--config" command-line parameter with a valid relative filepath '
                          'as an argument, else a ".yap_config.yaml" file should be placed in the current directory.')
     file_path = Path(Path.cwd() / file_name)
+    logger.info(f'Loading yapper config from {file_path}')
     return yaml.load(open(file_path), Loader=yaml.SafeLoader)
 
 
-def process_config(config_file: dict) -> dict:
-    """
-
-    Parameters
-    ----------
-    config_file
-
-    Returns
-    -------
-    yap_config
-    """
-    if 'module_map' not in config_file:
+def process_config(yap_config: dict) -> dict:
+    if 'module_map' not in yap_config:
         raise KeyError('The configuration file requires a dictionary mapping modules to output paths for markdown.')
     # check for invalid keys
-    for k in config_file.keys():
-        if k not in yap_template_config and k != 'module_map':
+    for k in yap_config.keys():
+        if k not in yap_template_config:
             raise KeyError(f'Config file key: {k} is not a valid configuration setting.')
     # override defaults from config file
     for def_key in yap_template_config.keys():
-        if def_key in config_file:
-            yap_template_config[def_key] = config_file[def_key]
+        if def_key in yap_config:
+            yap_template_config[def_key] = yap_config[def_key]
     return yap_template_config
 
 
-def main(args) -> None:
-    """
-    Parameters
-    ----------
-    args:
-    """
-    config_file = load_config(args)
-    yap_config = process_config(config_file)
+def main(yap_config: dict) -> None:
     # check and add package root path if spec'd in config
     # this should only be necessary if the script is placed somewhere other than the package root
     if 'package_root_relative_path' in yap_config:
@@ -125,5 +102,7 @@ def main(args) -> None:
 
 if __name__ == '__main__':
     args = arg_parser.parse_args()
+    config_file = load_config(args)
+    yap_config = process_config(config_file)
     # call main function
-    main(args)
+    main(yap_config)

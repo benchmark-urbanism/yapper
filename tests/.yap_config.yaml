@@ -1,7 +1,6 @@
-package_root_relative_path: '..'
 signature_template: "\n\n<FuncSignature>\n<pre>\n{signature}\n</pre>\n</FuncSignature>\n\n"
 heading_template: "\n\n<FuncHeading>{heading}</FuncHeading>\n\n"
 param_template: "\n\n<FuncElement name='{name}' type='{type}'>\n\n{description}\n\n</FuncElement>\n\n"
 return_template: "\n\n<FuncElement name='{name}'>\n\n{description}\n\n</FuncElement>\n\n"
 module_map:
-  tests.mock_file: mock_file.md
+  tests.mock_file: mock_custom_file.md

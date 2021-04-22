@@ -16,7 +16,7 @@ from setuptools import setup
 
 setup(
     name='yapper',
-    version='0.0.1',
+    version='0.0.1b1',
     packages=['yapper'],
     description='Simple python parser from docstrings to markdown',
     url='https://github.com/benchmark-urbanism/docdown',
