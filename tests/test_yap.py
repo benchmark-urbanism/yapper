@@ -5,7 +5,7 @@ import docspec_python
 import pytest
 import yaml
 
-from tests import expected
+import expected
 import yapper
 
 
