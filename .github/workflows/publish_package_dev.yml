@@ -2,7 +2,7 @@ name: publish dev package
 on:
   push:
     tags:
-      - *[ab]*
+      - '*.*.*[ab]*'
 jobs:
   publish-package:
     runs-on: ubuntu-latest
