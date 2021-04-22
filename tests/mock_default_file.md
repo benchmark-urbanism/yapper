@@ -19,11 +19,15 @@ A mock function for testing purposes
 
 
 
-**param_a** _str_: A test param.
+**param_a** _str_: A *test* _param_.
 
 
 
-**param_b** _int_: Another test param.
+**param_b** _int_: Another *test* _param_.
+
+| col A |: col B |
+|=======|========|
+| boo   | baa    |
 
 
 
@@ -51,11 +55,7 @@ Mock class initialisation
 
 
 
-**param_d** _float_: And another with a table.
-
-| col A |: col B |
-|=======|========|
-| boo   | baa    |
+**param_d** _float_: And another.
 
 
 

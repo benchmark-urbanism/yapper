@@ -4,8 +4,8 @@ lines_default = [
     '\n\n```py\nmock_function(param_a,\n              param_b=1)\n              -> int\n```\n\n',
     'A mock function for testing purposes\n',
     '\n\n#### Parameters\n\n',
-    '\n\n**param_a** _str_: A test param.\n\n',
-    '\n\n**param_b** _int_: Another test param.\n\n',
+    '\n\n**param_a** _str_: A *test* _param_.\n\n',
+    '\n\n**param_b** _int_: Another *test* _param_.\n\n| col A |: col B |\n|=======|========|\n| boo   | baa    |\n\n',
     '\n\n## **class** MockClass\n\n',
     'A mock class for testing purposes.',
     '\n\n## MockClass\n\n',
@@ -13,7 +13,7 @@ lines_default = [
     'Mock class initialisation\n',
     '\n\n#### Parameters\n\n',
     '\n\n**param_c** _float_: Yet another test param.\n\n',
-    '\n\n**param_d** _float_: And another with a table.\n\n| col A |: col B |\n|=======|========|\n| boo   | baa    |\n\n',
+    '\n\n**param_d** _float_: And another.\n\n',
     '\n\n#### MockClass.param\\_e\n\n',
     'A property describing property param_e',
     '\n\n## MockClass.hello\n\n',
@@ -29,8 +29,8 @@ lines_custom = [
     '\n\n<FuncSignature>\n<pre>\nmock_function(param_a,\n              param_b=1)\n              -> int\n</pre>\n</FuncSignature>\n\n',
     'A mock function for testing purposes\n',
     '\n\n<FuncHeading>Parameters</FuncHeading>\n\n',
-    "\n\n<FuncElement name='param_a' type='str'>\n\nA test param.\n\n</FuncElement>\n\n",
-    "\n\n<FuncElement name='param_b' type='int'>\n\nAnother test param.\n\n</FuncElement>\n\n",
+    "\n\n<FuncElement name='param_a' type='str'>\n\nA *test* _param_.\n\n</FuncElement>\n\n",
+    "\n\n<FuncElement name='param_b' type='int'>\n\nAnother *test* _param_.\n\n| col A |: col B |\n|=======|========|\n| boo   | baa    |\n\n</FuncElement>\n\n",
     '\n\n## **class** MockClass\n\n',
     'A mock class for testing purposes.',
     '\n\n## MockClass\n\n',
@@ -38,7 +38,7 @@ lines_custom = [
     'Mock class initialisation\n',
     '\n\n<FuncHeading>Parameters</FuncHeading>\n\n',
     "\n\n<FuncElement name='param_c' type='float'>\n\nYet another test param.\n\n</FuncElement>\n\n",
-    "\n\n<FuncElement name='param_d' type='float'>\n\nAnd another with a table.\n\n| col A |: col B |\n|=======|========|\n| boo   | baa    |\n\n</FuncElement>\n\n",
+    "\n\n<FuncElement name='param_d' type='float'>\n\nAnd another.\n\n</FuncElement>\n\n",
     '\n\n#### MockClass.param\\_e\n\n',
     'A property describing property param_e',
     '\n\n## MockClass.hello\n\n',
@@ -69,11 +69,15 @@ A mock function for testing purposes
 
 
 
-**param_a** _str_: A test param.
+**param_a** _str_: A *test* _param_.
 
 
 
-**param_b** _int_: Another test param.
+**param_b** _int_: Another *test* _param_.
+
+| col A |: col B |
+|=======|========|
+| boo   | baa    |
 
 
 
@@ -101,11 +105,7 @@ Mock class initialisation
 
 
 
-**param_d** _float_: And another with a table.
-
-| col A |: col B |
-|=======|========|
-| boo   | baa    |
+**param_d** _float_: And another.
 
 
 
@@ -158,7 +158,7 @@ A mock function for testing purposes
 
 <FuncElement name='param_a' type='str'>
 
-A test param.
+A *test* _param_.
 
 </FuncElement>
 
@@ -166,7 +166,11 @@ A test param.
 
 <FuncElement name='param_b' type='int'>
 
-Another test param.
+Another *test* _param_.
+
+| col A |: col B |
+|=======|========|
+| boo   | baa    |
 
 </FuncElement>
 
@@ -204,11 +208,7 @@ Yet another test param.
 
 <FuncElement name='param_d' type='float'>
 
-And another with a table.
-
-| col A |: col B |
-|=======|========|
-| boo   | baa    |
+And another.
 
 </FuncElement>
 

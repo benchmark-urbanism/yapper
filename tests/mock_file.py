@@ -5,9 +5,13 @@ def mock_function(param_a: str, param_b: int = 1) -> int:
     Parameters
     ----------
     param_a
-        A test param.
+        A *test* _param_.
     param_b
-        Another test param.
+        Another *test* _param_.
+
+        | col A |: col B |
+        |=======|========|
+        | boo   | baa    |
     """
     pass
 
@@ -25,11 +29,7 @@ class MockClass:
         param_c
             Yet another test param.
         param_d
-            And another with a table.
-
-            | col A |: col B |
-            |=======|========|
-            | boo   | baa    |
+            And another.
         """
         self.param_c = param_c
         self.param_d = param_d

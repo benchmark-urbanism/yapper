@@ -23,7 +23,7 @@ A mock function for testing purposes
 
 <FuncElement name='param_a' type='str'>
 
-A test param.
+A *test* _param_.
 
 </FuncElement>
 
@@ -31,7 +31,11 @@ A test param.
 
 <FuncElement name='param_b' type='int'>
 
-Another test param.
+Another *test* _param_.
+
+| col A |: col B |
+|=======|========|
+| boo   | baa    |
 
 </FuncElement>
 
@@ -69,11 +73,7 @@ Yet another test param.
 
 <FuncElement name='param_d' type='float'>
 
-And another with a table.
-
-| col A |: col B |
-|=======|========|
-| boo   | baa    |
+And another.
 
 </FuncElement>
 
