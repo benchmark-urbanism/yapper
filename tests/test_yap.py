@@ -26,12 +26,16 @@ def test_load_config():
         yapper.load_config(args)
     # reset path
     temp_path.rename('.yap_config.yaml')
-    # should work if valid path provided
+    # should work if relative path provided
     args = yapper.arg_parser.parse_args(['--config', './.yap_config.yaml'])
     yap_config = yapper.load_config(args)
     cross_check_config = yaml.load(open(config_path), Loader=yaml.SafeLoader)
     assert yap_config == cross_check_config
-
+    # should work if absolute path provided
+    args = yapper.arg_parser.parse_args(['--config', str(Path('./.yap_config.yaml').absolute())])
+    yap_config = yapper.load_config(args)
+    cross_check_config = yaml.load(open(config_path), Loader=yaml.SafeLoader)
+    assert yap_config == cross_check_config
 
 def test_process_config():
     # should raise if module_map not provided

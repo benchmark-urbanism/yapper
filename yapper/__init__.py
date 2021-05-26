@@ -47,10 +47,15 @@ def load_config(args: argparse.Namespace) -> dict:
             if fp.exists():
                 file_name = name
                 break
-    if file_name is None or not Path(Path.cwd() / file_name).exists():
+    if file_name is None:
         raise ValueError('Yapper requires either a "--config" command-line parameter with a valid relative filepath '
                          'as an argument, else a ".yap_config.yaml" file should be placed in the current directory.')
-    file_path = Path(Path.cwd() / file_name)
+    if Path(file_name).is_absolute():
+        file_path = Path(file_name)
+    else:
+        file_path = Path(Path.cwd() / file_name)
+    if not file_path.exists():
+        raise ValueError(f'Config file path of {file_path} does not exist.')
     logger.info(f'Loading yapper config from {file_path}')
     return yaml.load(open(file_path), Loader=yaml.SafeLoader)
 

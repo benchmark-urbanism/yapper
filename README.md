@@ -58,7 +58,7 @@ A mock function for testing purposes
 
 ## Configuration
 
-Configuration is provided in the form of a `.yap_config.yaml` file placed in the current directory, else a `--config` parameter can be provided with a relative filepath to the config file.
+Configuration is provided in the form of a `.yap_config.yaml` file placed in the current directory, else a `--config` parameter can be provided with a relative or absolute filepath to the config file.
 
 ```bash
 yapper --config ./my_config.yaml
