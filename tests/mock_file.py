@@ -1,4 +1,9 @@
-def mock_function(param_a: str, param_b: int = 1) -> int:
+"""
+module docstring content
+more content
+"""
+
+def mock_function(param_a: str, param_b = 1) -> int:
     """
     A mock function for testing purposes
 
@@ -15,12 +20,13 @@ def mock_function(param_a: str, param_b: int = 1) -> int:
     """
     pass
 
+
 class MockClass:
     """
     A mock class for testing purposes.
     """
 
-    def __init__(self, param_c: float = 1.1, param_d: float = 0.9):
+    def __init__(self, param_c: float = 1.1, param_d: float = 0.9, **kwargs: dict):
         """
         Mock class initialisation
 
@@ -30,9 +36,12 @@ class MockClass:
             Yet another test param.
         param_d
             And another.
+        kwargs
+            Keyword args.
         """
         self.param_c = param_c
         self.param_d = param_d
+        print(f'ignoring {kwargs}')
 
     @property
     def param_e(self):

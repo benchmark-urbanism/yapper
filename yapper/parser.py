@@ -7,10 +7,11 @@ Loosely based on Numpy-style docstrings.
 
 Automatically infers types from signature typehints. Explicitly documented types are NOT supported in docstrings.
 """
+import ast
 import logging
+import pathlib
 
-import docspec
-import docspec_python
+import docstring_parser
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -101,17 +102,10 @@ def extract_text_block(splits_enum, splits, indented_block=False, is_hint_block=
             return lookahead_idx, next_line, '\n'.join(block)
 
 
-def process_member(member, lines, config, class_name=None):
-    # this method only processes functions and classes
-    if not isinstance(member, (docspec.Function, docspec.Class)):
-        return
-    # don't process private members
-    if (member.name.startswith('_') and not member.name == '__init__') or _is_setter(member):
-        return
-    # keep track of the arguments and their types for automatically building function parameters later-on
-    arg_types_map = {}
-    # escape underscores in class / method / function names
-    member_name = member.name.replace('_', '\_')
+def process_class(ast_class: ast.ClassDef,
+                  lines: list[str],
+                  config: dict[str, str]):
+    """ """
     if class_name is not None:
         class_name_esc = class_name.replace('_', '\_')
         # if a class definition use the class template
@@ -127,55 +121,66 @@ def process_member(member, lines, config, class_name=None):
         # if a class method
         elif class_name is not None:
             lines.append(config['function_name_template'].format(function_name=f'{class_name_esc}.{member_name}'))
-    # otherwise a function
-    else:
-        lines.append(config['function_name_template'].format(function_name=member_name))
-    # process the member's signature if a method or a function - classes won't have args
-    if hasattr(member, 'args') and not _is_property(member):
-        # prepare the signature string - use member.name instead of escaped versions
-        if class_name is not None and member.name == '__init__':
-            signature = f'{class_name}('
-        elif class_name is not None:
-            signature = f'{class_name}.{member.name}('
+        if hasattr(member, 'args') and not _is_property(member):
+            # prepare the signature string - use member.name instead of escaped versions
+            if class_name is not None and member.name == '__init__':
+                signature = f'{class_name}('
+            elif class_name is not None:
+                signature = f'{class_name}.{member.name}('
+
+
+def process_function(ast_function: ast.FunctionDef,
+                     lines: list[str],
+                     config: dict[str, str]):
+    """ """
+    # don't process private members
+    if ast_function.name.startswith('_') and not ast_function.name == '__init__':
+        return
+    # keep track of the arguments and their types for automatically building function parameters later-on
+    arg_types_map = {}
+    # escape underscores
+    func_name = ast_function.name.replace('_', '\_')
+    lines.append(config['function_name_template'].format(function_name=func_name))
+    # extract parameters
+    param_names = []
+    param_types = []
+    for arg in ast_function.args.args:
+        param_names.append(arg.arg)
+        if hasattr(arg.annotation, 'id') and getattr(arg.annotation, 'id') is not None:
+            param_types.append(arg.annotation.id)
         else:
-            signature = f'{member.name}('
-        # the spacer is used for lining up wrapped lines
-        spacer = len(signature)
-        # unpack the arguments and add
-        for idx, arg in enumerate(member.args):
-            # ignore self parameter
-            if arg.name == 'self':
-                continue
-            # param name
-            param_name = arg.name
-            # add to the arg_types_map map using the function / method name and param name
-            arg_types_map[param_name] = arg.datatype
-            # if the argument type is KeywordRemainder then add the symbols
-            if arg.type.name == 'KeywordRemainder':
-                param_name = '**' + param_name
-            # first argument is wedged against bracket
-            # except for classes where self parameters are ignored and second argument is wedged
-            if idx == 0 or class_name is not None and idx == 1:
-                signature += param_name
-            # other arguments start on a new line
-            else:
-                signature += f'{" " * spacer}{param_name}'
-            # add default values where present
-            if arg.default_value is not None:
-                signature += f'={arg.default_value}'
-            # if not the last argument, add a comma
-            if idx != len(member.args) - 1:
-                signature += ',\n'
-        # close the signature
-        signature += ')'
-        # add the return type if present
-        if member.return_type is not None:
-            signature += f'\n{" " * spacer}-> {member.return_type}'
-        # set into the template
-        signature = config['signature_template'].format(signature=signature)
-        lines.append(signature)
+            param_types.append(None)
+    param_defaults = [None] * (len(ast_function.args.args) - len(ast_function.args.defaults))
+    for default in ast_function.args.defaults:
+        param_defaults.append(getattr(default, 'value'))
+    # process signature
+    signature = f'{ast_function.name}('
+    # the spacer is used for lining up wrapped lines
+    spacer = len(signature)
+    for idx, (param_name, param_default) in enumerate(zip(param_names, param_defaults)):
+        param = f'{param_name}'
+        if param_default is not None:
+            param += f'={param_default}'
+        # first argument is wedged against bracket
+        if idx == 0:
+            signature += param
+        # other arguments start on a new line
+        else:
+            signature += f'{" " * spacer}{param}'
+        # if not the last argument, add a comma
+        if idx != len(param_names) - 1:
+            signature += ',\n'
+    # close the signature
+    signature += ')'
+    # add the return type if present
+    if hasattr(ast_function.returns, 'id') and getattr(ast_function.returns, 'id') is not None:
+        signature += f'\n{" " * spacer}-> {getattr(ast_function.returns, "id")}'
+    # set into the template
+    signature = config['signature_template'].format(signature=signature)
+    lines.append(signature)
     # process the docstring
-    if member.docstring is not None:
+    doc_str = docstring_parser.parse(ast.get_docstring(ast_function))
+    if doc_str is not None:
         # split the docstring at new lines
         splits = member.docstring.split('\n')
         # iter the docstring with a lookahead index
@@ -236,32 +241,34 @@ def process_member(member, lines, config, class_name=None):
             pass
 
 
-def parse(module_name: str,
-          module: docspec_python.Module,
-          config: dict):
+def parse(module_path: pathlib.Path,
+          ast_module: ast.Module,
+          yap_config: dict):
+    """ """
     lines = []
     # frontmatter
-    if config['frontmatter_template'] is not None:
-        lines.append(config['frontmatter_template'])
+    if yap_config['frontmatter_template'] is not None:
+        lines.append(yap_config['frontmatter_template'])
     # module name
-    lines.append(config['module_name_template'].format(module_name=module_name).replace('_', '\_'))
+    module_str = str(module_path)
+    module_str = module_str.rstrip('.py')
+    path_splits = module_str.split('/')
+    path_splits = [ps for ps in path_splits if ps not in ['..', '.']]
+    path_text = '.'.join(path_splits)
+    path_text = path_text.replace('_', '\_')
+    lines.append(yap_config['module_name_template'].format(module_name=str(path_text)))
     # module docstring
-    if module.docstring is not None:
-        lines.append(module.docstring.strip().replace('\n', ' '))
-    if config['toc_template'] is not None:
-        lines.append(config['toc_template'])
+    module_docstring = ast.get_docstring(ast_module)
+    if module_docstring is not None:
+        lines.append(module_docstring.strip().replace('\n', ' '))
+    if yap_config['toc_template'] is not None:
+        lines.append(yap_config['toc_template'])
     # iterate the module's members
-    for member in module.members:
-        # ignores module-level variables
-        if isinstance(member, docspec.Data):
-            continue
+    for item in ast_module.body:
         # process functions
-        elif isinstance(member, docspec.Function):
-            process_member(member, lines, config)
+        if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            process_function(item, lines, yap_config)
         # process classes and nested methods
-        elif isinstance(member, docspec.Class):
-            class_name = member.name
-            process_member(member, lines, config, class_name)
-            for nested_member in member.members:
-                process_member(nested_member, lines, config, class_name)
+        elif isinstance(item, ast.ClassDef):
+            process_class(item, lines, yap_config)
     return lines

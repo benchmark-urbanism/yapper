@@ -1,7 +1,7 @@
+import ast
 import copy
 from pathlib import Path
 
-import docspec_python
 import pytest
 import yaml
 
@@ -37,6 +37,7 @@ def test_load_config():
     cross_check_config = yaml.load(open(config_path), Loader=yaml.SafeLoader)
     assert yap_config == cross_check_config
 
+
 def test_process_config():
     # should raise if module_map not provided
     with pytest.raises(KeyError):
@@ -64,17 +65,22 @@ def test_process_config():
 
 
 def test_parse():
-    modules = docspec_python.load_python_modules(modules=['tests.mock_file'])
-    for module in modules:
-        # using the basic config
-        lines = yapper.parser.parse('tests.mock_file', module, yap_clean_config)
-        assert lines == expected.lines_default
-        # using the custom config
-        args = yapper.arg_parser.parse_args(['--config', './.yap_config.yaml'])
-        yap_config = yapper.load_config(args)
-        merged_config = yapper.process_config(yap_config)
-        lines = yapper.parser.parse('tests.mock_file', module, merged_config)
-        assert lines == expected.lines_custom
+    module_path = Path('../tests/mock_file.py')
+    mock_file = open(module_path)
+    ast_module = ast.parse(mock_file.read())
+    # using the basic config
+    lines = yapper.parser.parse(module_path=module_path,
+                                ast_module=ast_module,
+                                yap_config=yap_clean_config)
+    assert lines == expected.lines_default
+    # using the custom config
+    args = yapper.arg_parser.parse_args(['--config', './.yap_config.yaml'])
+    yap_config = yapper.load_config(args)
+    merged_config = yapper.process_config(yap_config)
+    lines = yapper.parser.parse(module_path=module_path,
+                                ast_module=ast_module,
+                                yap_config=merged_config)
+    assert lines == expected.lines_custom
 
 
 def test_main():

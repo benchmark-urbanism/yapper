@@ -1,13 +1,15 @@
 #!python
 import argparse
+import ast
 import logging
 from pathlib import Path
 import sys
 
-import docspec_python
+from docstring_parser import parse
 import yaml
 
 from yapper import parser
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
