@@ -1,38 +1,28 @@
 """
-Uses docspec to parse docstrings to markdown.
+Uses AST and docstring_parser to parse docstrings to html & markdown.
 
 Intended for use with static site generators where further linting / linking / styling is done downstream.
 
 Loosely based on Numpy-style docstrings.
 
-Automatically infers types from signature typehints. Explicitly documented types are NOT supported in docstrings.
+Automatically infers types from signature typehints.
+By design, explicitly documented types are NOT supported in docstrings.
 """
+from __future__ import annotations
+
 import ast
 import logging
 import pathlib
 
 import docstring_parser
+from dominate import tags
+from slugify import slugify
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 line_break_chars = ['-', '_', '!', '|', '>', ':']
-
-
-def _is_property(mem):
-    if mem.decorations is not None:
-        for dec in mem.decorations:
-            if dec.name == 'property':
-                return True
-    return False
-
-
-def _is_setter(mem):
-    if mem.decorations is not None:
-        for dec in mem.decorations:
-            if 'setter' in dec.name:
-                return True
-    return False
 
 
 def extract_text_block(splits_enum, splits, indented_block=False, is_hint_block=False):
@@ -106,168 +96,222 @@ def process_class(ast_class: ast.ClassDef,
                   lines: list[str],
                   config: dict[str, str]):
     """ """
-    if class_name is not None:
-        class_name_esc = class_name.replace('_', '\_')
-        # if a class definition use the class template
-        if isinstance(member, docspec.Class):
-            # when the class is passed-in directly its name is captured in the member_name
-            lines.append(config['class_name_template'].format(class_name=class_name_esc))
-        # if the class __init__, then display the class name and .__init__
-        elif class_name and member.name == '__init__':
-            lines.append(config['function_name_template'].format(function_name=f'{class_name_esc}'))
-        # if a class property
-        elif class_name is not None and _is_property(member):
-            lines.append(config['class_property_template'].format(prop_name=f'{class_name_esc}.{member_name}'))
-        # if a class method
-        elif class_name is not None:
-            lines.append(config['function_name_template'].format(function_name=f'{class_name_esc}.{member_name}'))
-        if hasattr(member, 'args') and not _is_property(member):
-            # prepare the signature string - use member.name instead of escaped versions
-            if class_name is not None and member.name == '__init__':
-                signature = f'{class_name}('
-            elif class_name is not None:
-                signature = f'{class_name}.{member.name}('
+    if ast_class is not None:
+        class_name = ast_class.name.replace('_', '\_')
+        # when the class is passed-in directly its name is captured in the member_name
+        lines.append(config['class_name_template'].format(class_name=class_name))
+        for item in ast_class.body:
+            if isinstance(item, ast.Expr):
+                if isinstance(item.value, ast.Constant):
+                    v = item.value.value.lstrip('\n').lstrip()
+                    lines.append(f'\n{v}')
+                else:
+                    raise NotImplementedError
+            elif isinstance(item, ast.FunctionDef):
+                is_property = False
+                for dec in item.decorator_list:
+                    if isinstance(dec, ast.Name):
+                        if dec.id == 'property':
+                            is_property = True
+                        else:
+                            raise NotImplementedError
+                    else:
+                        raise NotImplementedError
+                if is_property:
+                    lines.append(config['class_property_template'].format(prop_name=f'{class_name}.{item.name}'))
+                else:
+                    is_init = item.name == '__init__'
+                    process_function(ast_function=item,
+                                     lines=lines,
+                                     config=config,
+                                     class_name=class_name,
+                                     is_init=is_init)
+
+
+def process_signature(func_name: str,
+                      param_names: list[str],
+                      param_defaults: list[str]):
+    """ """
+    # process signature
+    sig_fragment = tags.div(cls='yap func-sig-title')
+    sig_fragment.appendChild(
+        tags.div(f'{func_name}(',
+                 cls='yap func-sig-start'))
+    # nest sig params for CSS alignment
+    sig_params_fragment = tags.div(cls='yap func-sig-params')
+    for param_name, param_default in zip(param_names, param_defaults):
+        param = f'{param_name}'
+        if param_default is not None:
+            param += f'={param_default}'
+        sig_params_fragment.appendChild(
+            tags.div(param,
+                     cls='yap func-sig-param'))
+    # close the signature
+    sig_fragment.appendChild(sig_params_fragment)
+    sig_fragment.appendChild(
+        tags.div(')',
+                 cls='yap func-sig-end'))
+    return sig_fragment
+
+
+def add_heading(doc_str_frag: tags.div,
+                heading: str):
+    """ """
+    return doc_str_frag.appendChild(
+                tags.h2(heading,
+                        cls='yap doc-str-heading'))
+
+
+def add_param_set(doc_str_frag: tags.div,
+                  param_name: str,
+                  param_type: str,
+                  param_description: str):
+    """ """
+    return doc_str_frag.appendChild(
+        tags.div(
+            tags.div(
+                tags.div(param_name,
+                         cls='yap doc-str-param-name'),
+                tags.div(param_type,
+                         cls='yap doc-str-param-type'),
+                cls='yap doc-str-param-def'
+            ),
+            tags.div(param_description,
+                     cls='yap doc-str-param-desc'),
+            cls='yap doc-str-param-container'))
+
+
+def process_docstring(doc_str: str | None,
+                      param_names: list[str],
+                      param_types: list[str]):
+    """ """
+    doc_str_frag = tags.div(cls='yap doc-str-content')
+    if doc_str is not None:
+        parsed_doc_str = docstring_parser.parse(doc_str)
+        if parsed_doc_str.short_description is not None:
+            doc_str_frag.appendChild(
+                tags.p(parsed_doc_str.short_description,
+                       cls='yap doc-str-text'))
+        if parsed_doc_str.long_description is not None:
+            doc_str_frag.appendChild(
+                tags.p(parsed_doc_str.long_description,
+                       cls='yap doc-str-text'))
+        if parsed_doc_str.params is not None:
+            doc_str_frag = add_heading(doc_str_frag=doc_str_frag,
+                                       heading='Parameters')
+            for idx, param in enumerate(parsed_doc_str.params):
+                param_name = param.arg_name
+                if param_name == 'kwargs':
+                    param_type = 'dict'
+                else:
+                    param_idx = param_names.index(param_name)
+                    param_type = param_types[param_idx]
+                doc_str_frag = add_param_set(doc_str_frag=doc_str_frag,
+                                             param_name=param_name,
+                                             param_type=param_type,
+                                             param_description=param.description)
+        if len(parsed_doc_str.raises):
+            doc_str_frag = add_heading(doc_str_frag=doc_str_frag,
+                                       heading='Raises')
+            print('here')
+        if len(parsed_doc_str.many_returns):
+            logger.warning('Many Returns not implemented.')
+        if parsed_doc_str.returns is not None:
+            doc_str_frag = add_heading(doc_str_frag=doc_str_frag,
+                                       heading='Returns')
+            print('here')
+        if len(parsed_doc_str.examples):
+            doc_str_frag = add_heading(doc_str_frag=doc_str_frag,
+                                       heading='Examples')
+            print('here')
+        if parsed_doc_str.deprecation is not None:
+            doc_str_frag = add_heading(doc_str_frag=doc_str_frag,
+                                       heading='Deprecation')
+            print('here')
+    return doc_str_frag
 
 
 def process_function(ast_function: ast.FunctionDef,
-                     lines: list[str],
-                     config: dict[str, str]):
+                     config: dict[str, str],
+                     class_name: str = None,
+                     is_init: bool = False):
     """ """
     # don't process private members
     if ast_function.name.startswith('_') and not ast_function.name == '__init__':
         return
-    # keep track of the arguments and their types for automatically building function parameters later-on
-    arg_types_map = {}
-    # escape underscores
-    func_name = ast_function.name.replace('_', '\_')
-    lines.append(config['function_name_template'].format(function_name=func_name))
+    func_fragment = tags.div(cls='yap func')
+    if class_name:
+        name = f'{class_name}.{ast_function.name}'
+    else:
+        name = ast_function.name
+    func_fragment.appendChild(tags.h2(name,
+                                      cls='yap func-title',
+                                      id=slugify(name)))
     # extract parameters
     param_names = []
     param_types = []
-    for arg in ast_function.args.args:
+    param_defaults = []
+    # pad defaults to keep in sync
+    pad = len(ast_function.args.args) - len(ast_function.args.defaults)
+    for idx, arg in enumerate(ast_function.args.args):
+        if arg.arg == 'self':
+            continue
         param_names.append(arg.arg)
         if hasattr(arg.annotation, 'id') and getattr(arg.annotation, 'id') is not None:
             param_types.append(arg.annotation.id)
         else:
             param_types.append(None)
-    param_defaults = [None] * (len(ast_function.args.args) - len(ast_function.args.defaults))
-    for default in ast_function.args.defaults:
-        param_defaults.append(getattr(default, 'value'))
-    # process signature
-    signature = f'{ast_function.name}('
-    # the spacer is used for lining up wrapped lines
-    spacer = len(signature)
-    for idx, (param_name, param_default) in enumerate(zip(param_names, param_defaults)):
-        param = f'{param_name}'
-        if param_default is not None:
-            param += f'={param_default}'
-        # first argument is wedged against bracket
-        if idx == 0:
-            signature += param
-        # other arguments start on a new line
+        if idx < pad:
+            param_defaults.append(None)
         else:
-            signature += f'{" " * spacer}{param}'
-        # if not the last argument, add a comma
-        if idx != len(param_names) - 1:
-            signature += ',\n'
-    # close the signature
-    signature += ')'
-    # add the return type if present
-    if hasattr(ast_function.returns, 'id') and getattr(ast_function.returns, 'id') is not None:
-        signature += f'\n{" " * spacer}-> {getattr(ast_function.returns, "id")}'
-    # set into the template
-    signature = config['signature_template'].format(signature=signature)
-    lines.append(signature)
-    # process the docstring
-    doc_str = docstring_parser.parse(ast.get_docstring(ast_function))
-    if doc_str is not None:
-        # split the docstring at new lines
-        splits = member.docstring.split('\n')
-        # iter the docstring with a lookahead index
-        splits_enum = enumerate(splits, start=1)
-        try:
-            # skip and go straight to headings if no introductory text
-            if len(splits) > 1 and splits[1].startswith('---'):
-                lookahead_idx, next_line = next(splits_enum)
-            # otherwise, look for introductory text
-            else:
-                lookahead_idx, next_line, text_block = extract_text_block(splits_enum, splits)
-                if len(text_block):
-                    lines.append(text_block)
-            # look for headings
-            while lookahead_idx < len(splits):
-                # break if not a heading
-                if not splits[lookahead_idx].startswith('---'):
-                    raise ValueError('Parser out of lockstep with headings.')
-                heading = next_line.strip()
-                lines.append(config['heading_template'].format(heading=heading))
-                # skip the underscore line
-                next(splits_enum)
-                # if not param-type headings - just extract the text blocks
-                if heading not in ['Parameters', 'Returns', 'Yields', 'Raises']:
-                    lookahead_idx, next_line, text_block = extract_text_block(splits_enum, splits)
-                    if len(text_block):
-                        lines.append(text_block)
-                # otherwise iterate the parameters and their indented arguments
-                else:
-                    # initial prime to move from heading to parameter name
-                    lookahead_idx, next_line = next(splits_enum)
-                    # Iterate nested parameters
-                    while True:
-                        # this parser doesn't process typehints, use typehints in function declarations instead
-                        if ' ' in next_line.strip() or ':' in next_line.strip():
-                            raise ValueError('Parser does not support types in docstrings. Use type-hints instead.')
-                        # extract the parameter name
-                        param_name = next_line.strip()
-                        # process the indented parameter description
-                        lookahead_idx, next_line, param_description = extract_text_block(splits_enum,
-                                                                                         splits,
-                                                                                         indented_block=True)
-                        # only include type information for Parameters
-                        if heading == 'Parameters':
-                            param_type = arg_types_map[param_name]
-                            param = config['param_template'].format(name=param_name,
-                                                                    type=param_type,
-                                                                    description=param_description)
-                        else:
-                            param = config['return_template'].format(name=param_name,
-                                                                     description=param_description)
-                        lines.append(param)
-                        # break if a new heading found
-                        if lookahead_idx == len(splits) or splits[lookahead_idx].startswith('---'):
-                            break
-        # catch exhausted enum
-        except StopIteration:
-            pass
+            param_defaults.append(getattr(ast_function.args.defaults[idx - pad], 'value'))
+    # process signature
+    if class_name:
+        func_name = f'{class_name}.{ast_function.name}('
+    else:
+        func_name = f'{ast_function.name}('
+    sig_fragment = process_signature(func_name=func_name,
+                                     param_names=param_names,
+                                     param_defaults=param_defaults)
+    func_fragment.appendChild(tags.div(cls='yap func-sig-content').appendChild(sig_fragment))
+    # process docstring
+    doc_str = ast.get_docstring(ast_function)
+    doc_str_fragment = process_docstring(doc_str=doc_str,
+                                         param_names=param_names,
+                                         param_types=param_types)
+    func_fragment.appendChild(tags.div(cls='yap func-doc-str-content').appendChild(doc_str_fragment))
+    return func_fragment
 
 
 def parse(module_path: pathlib.Path,
           ast_module: ast.Module,
           yap_config: dict):
     """ """
-    lines = []
-    # frontmatter
-    if yap_config['frontmatter_template'] is not None:
-        lines.append(yap_config['frontmatter_template'])
     # module name
     module_str = str(module_path)
     module_str = module_str.rstrip('.py')
     path_splits = module_str.split('/')
     path_splits = [ps for ps in path_splits if ps not in ['..', '.']]
     path_text = '.'.join(path_splits)
-    path_text = path_text.replace('_', '\_')
-    lines.append(yap_config['module_name_template'].format(module_name=str(path_text)))
+    # start the DOM fragment
+    dom_fragment = tags.div(cls='yap module')
+    # add
+    dom_fragment.appendChild(tags.h1(path_text,
+                                     cls='yap module-title',
+                                     id=slugify(path_text)))
     # module docstring
     module_docstring = ast.get_docstring(ast_module)
     if module_docstring is not None:
-        lines.append(module_docstring.strip().replace('\n', ' '))
-    if yap_config['toc_template'] is not None:
-        lines.append(yap_config['toc_template'])
+        dom_fragment.appendChild(
+            tags.div(module_docstring.replace('\n', ' ').strip(),
+                     cls='yap docstring'))
     # iterate the module's members
     for item in ast_module.body:
         # process functions
         if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            process_function(item, lines, yap_config)
+            func_fragment = process_function(item, yap_config)
+            if func_fragment is not None:
+                dom_fragment.appendChild(func_fragment)
         # process classes and nested methods
         elif isinstance(item, ast.ClassDef):
             process_class(item, lines, yap_config)
