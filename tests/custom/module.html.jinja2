@@ -1,0 +1,162 @@
+{% extends "frame.html.jinja2" %}
+{% block title %}{{ module.modulename }} API documentation{% endblock %}
+{% block content %}
+    <main class="pdoc">
+        <section>
+            <h1>{{ module.modulename }}</h1>
+            <p>{{ docstring(module) }}</p>
+        </section>
+        {% for m in module.flattened_own_members if is_public(m) | trim %}
+            <section id="{{ m.qualname or m.name }}">
+                {{ member(m) }}
+                {% if m.type == "class" %}
+                    {% for m in m.own_members if m.type != "class" and is_public(m) | trim %}
+                        <div id="{{ m.qualname }}" class="classattr">
+                            {{ member(m) }}
+                        </div>
+                    {% endfor %}
+                    {% set inherited_members = inherited(m) | trim %}
+                    {% if inherited_members %}
+                        <div class="inherited">
+                            <h5>Inherited Members</h5>
+                            <dl>
+                                {{ inherited_members }}
+                            </dl>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </section>
+        {% endfor %}
+    </main>
+{% endblock content %}
+
+{% defaultmacro bases(cls) %}
+    {%- if cls.bases -%}
+        <wbr>(
+        {%- for base in cls.bases -%}
+            <span class="base">{{ base[:2] | link(text=base[2]) }}</span>
+            {%- if loop.nextitem %}, {% endif %}
+        {%- endfor -%}
+        )
+    {%- endif -%}
+{% enddefaultmacro %}
+
+{% defaultmacro default_value(var) -%}
+    {%- if var.default_value_str -%}
+        <span class="default_value">{{ var.default_value_str | escape | linkify }}</span>
+    {%- endif -%}
+{% enddefaultmacro %}
+
+{% defaultmacro annotation(var) %}
+    {%- if var.annotation_str -%}
+        <span class="annotation">{{ var.annotation_str | escape | linkify }}</span>
+    {%- endif -%}
+{% enddefaultmacro %}
+
+{% defaultmacro decorators(doc) %}
+    {% for d in doc.decorators if not d.startswith("@_") %}
+        <div class="decorator">{{ d }}</div>
+    {% endfor %}
+{% enddefaultmacro %}
+
+{% defaultmacro function(fn) -%}
+    <div class="attr function">
+        {{ decorators(fn) }}
+        {% if fn.name == "__init__" %}
+            <span class="name">{{ ".".join(fn.qualname.split(".")[:-1]) }}</span>
+            {#- no space -#}
+            <span class="signature">{{ fn.signature_without_self | escape | linkify }}</span>
+        {% else %}
+            <span class="def">{{ fn.funcdef }}</span>
+            <span class="name">{{ fn.name }}</span>
+            {#- no space -#}
+            <span class="signature">{{ fn.signature | escape | linkify }}</span>:
+        {% endif %}
+    </div>
+{% enddefaultmacro %}
+
+{% defaultmacro variable(var) %}
+    <div class="attr variable">
+        <span class="name">{{ var.name }}</span>{{ annotation(var) }}{{ default_value(var) }}
+    </div>
+{% enddefaultmacro %}
+
+{% defaultmacro submodule(mod) %}
+    <div class="attr module"><span class="name">{{ mod.taken_from | link }}</span></div>
+{% enddefaultmacro %}
+
+{% defaultmacro class(cls) %}
+    <div class="attr class">
+        {{ decorators(cls) }}
+        <span class="def">class</span>
+        <span class="name">{{ cls.qualname }}</span>
+        {{- bases(cls) -}}:
+    </div>
+{% enddefaultmacro %}
+
+{% defaultmacro member(doc) %}
+    {% if doc.type == "class" %}
+        {{ class(doc) }}
+    {% elif doc.type == "function" %}
+        {{ function(doc) }}
+    {% elif doc.type == "module" %}
+        {{ submodule(doc) }}
+    {% else %}
+        {{ variable(doc) }}
+    {% endif %}
+    {{ docstring(doc) }}
+{% enddefaultmacro %}
+
+{% defaultmacro docstring(var) %}
+    {% if var.docstring %}
+        <div class="docstring">{{ var.docstring | to_markdown | to_html | linkify(namespace=var.qualname) }}</div>
+    {% endif %}
+{% enddefaultmacro %}
+
+{% defaultmacro is_public(doc) %}
+    {#
+    This macro is a bit unconventional in that its output is not rendered, but treated as a boolean:
+    Returning no text is interpreted as false, returning any other text is interpreted as true.
+    Implementing this as a macro makes it very easy to override with a custom template.
+    #}
+    {% if doc.type == "module" and doc.fullname not in all_modules %}
+        {# Don't document modules that were manually excluded from the documentation #}
+        {# https://github.com/mitmproxy/pdoc/issues/334 #}
+    {% elif not doc.name.startswith("_") %}
+        {# members not starting with an underscore are considered public by default #}
+        true
+    {% elif doc.name == "__init__" %}
+        {# the constructor is our special case which we also treat as public #}
+        true
+    {% elif (doc.qualname or doc.name) is in(module.obj.__all__ or []) %}
+        {# members starting with an underscore are still public if mentioned in __all__ #}
+        {% if doc.name != "__doc__" %}
+            {# ... but sometimes we have __doc__ in __all__, which we want to exclude for pdoc's purposes. #}
+            {# https://github.com/mitmproxy/pdoc/issues/235 #}
+            true
+        {% endif %}
+    {% endif %}
+{% enddefaultmacro %}
+
+{# fmt: off #}
+
+{% defaultmacro inherited(cls) %}
+    {% for base, members in cls.inherited_members.items() %}
+        {% set m = None %}{# workaround for https://github.com/pallets/jinja/issues/1427 #}
+        {% set member_html %}
+            {% for m in members if is_public(m) | trim %}
+                <dd id="{{ m.qualname }}" class="{{ m.type }}">
+                    {{- m.taken_from | link(text=m.name.replace("__init__",base[1])) -}}
+                </dd>
+            {% endfor %}
+        {% endset %}
+        {# we may not have any public members, in which case we don't want to print anything. #}
+        {% if member_html %}
+            <div><dt>{{ base | link }}</dt>
+                {{ member_html }}
+            </div>
+        {% endif %}
+    {% endfor %}
+{% enddefaultmacro %}
+
+{# fmt: on #}
