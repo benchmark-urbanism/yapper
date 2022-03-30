@@ -2,11 +2,13 @@
 module docstring content
 more content
 """
+from __future__ import annotations
+
 
 def mock_function(param_a: int,
-                  param_b: int = 2) -> int | str:
+                  param_b: int | float = 2) -> int | float | None:
     """
-    A mock function returning a sum of param_a and param_b if positive numbers
+    A mock function returning a sum of param_a and param_b if positive numbers, else None
 
     Parameters
     ----------
@@ -21,8 +23,15 @@ def mock_function(param_a: int,
 
     Returns
     -------
-    summed_number
-        The sum of _param_a_ and _param_b_ else "whoops" if negative numbers.
+    summed_number: int | float
+        The sum of _param_a_ and _param_b_.
+    None
+        None returned if values are negative.
+
+    Raises
+    ------
+    ValueError
+        Raises value error if params are not numbers.
 
     Notes
     -----
@@ -30,9 +39,20 @@ def mock_function(param_a: int,
     print(mock_function(1, 2))
     # prints 3
     ```
+
+    Random text
+
+    _Random table_
+
+    | col A |: col B |
+    |=======|========|
+    | boo   | baa    |
+
     """
     if param_a < 0 or param_b < 0:
-        return 'whoops'
+        return
+    if not isinstance(param_a, (int, float)) or not isinstance(param_b, (int, float)):
+        raise ValueError('Whoops')
     return param_a + param_b
 
 
@@ -42,9 +62,14 @@ class ParentClass:
     """
     parent_prop: str
 
-    def __init__(self):
+    def __init__(self, **kwargs: dict):
         """
         Parent initialisation.
+
+        Parameters
+        ----------
+        kwargs
+            Keyword args.
         """
         self.parent_prop = 'bee'
 
@@ -54,7 +79,10 @@ class ChildClass(ParentClass):
     A child class
     """
 
-    def __init__(self, param_c: float = 1.1, param_d: float = 0.9, **kwargs: dict):
+    def __init__(self,
+                 param_c: float = 1.1,
+                 param_d: float = 0.9,
+                 **kwargs: dict):
         """
         Child initialisation.
 
@@ -67,7 +95,7 @@ class ChildClass(ParentClass):
         kwargs
             Keyword args.
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.param_c = param_c
         self.param_d = param_d
         print(f'ignoring {kwargs}')
@@ -83,7 +111,7 @@ class ChildClass(ParentClass):
 
         Returns
         -------
-        saying_hello
+        str: saying_hello
             A string saying "hello"
         """
         saying_hello = 'hello'
