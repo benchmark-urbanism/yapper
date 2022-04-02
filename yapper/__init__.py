@@ -79,10 +79,14 @@ def process_config(yap_config: dict) -> dict:
         if k not in yap_template_config:
             raise KeyError(f'Config file key: {k} is not a valid configuration key.')
     # override defaults from config file
+    merged_config = {}
     for def_key in yap_template_config.keys():
         if def_key in yap_config:
-            yap_template_config[def_key] = yap_config[def_key]
-    return yap_template_config
+            merged_config[def_key] = yap_config[def_key]
+        else:
+            merged_config[def_key] = yap_template_config[def_key]
+
+    return merged_config
 
 
 def main(yap_config: dict) -> None:

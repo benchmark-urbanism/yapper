@@ -1,3 +1,7 @@
+# tests
+/tests/mock_basic_file.astro
+/tests/mock_custom_file.astro
+
 # pycharm
 .idea
 

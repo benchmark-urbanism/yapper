@@ -2,4 +2,4 @@ package_root_relative_path: '..'
 module_map:
   test.mock_file:
     py: ./tests/mock_file.py
-    astro: ./tests/mock_file.astro
+    astro: ./tests/mock_basic_file.astro

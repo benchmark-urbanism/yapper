@@ -5,9 +5,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from tests import expected
 import yapper
-
+from tests import expected
 
 yap_clean_config = copy.deepcopy(yapper.yap_template_config)
 
@@ -143,37 +142,31 @@ def test_parse():
     mock_file = open(file_path)
     ast_module = ast.parse(mock_file.read())
     # using the basic config
-    lines = yapper.parser.parse(module_name='tests.mock_file',
+    astro = yapper.parser.parse(module_name='tests.mock_file',
                                 ast_module=ast_module,
                                 yap_config=yap_clean_config)
-    assert lines.strip() == expected.lines_default.strip()
+    assert astro.strip() == expected.lines_default.strip()
     # using the custom config
-    args = yapper.arg_parser.parse_args(['--config', './.yap_config.yaml'])
+    args = yapper.arg_parser.parse_args(['--config', './.yap_config_custom.yaml'])
     yap_config = yapper.load_config(args)
     merged_config = yapper.process_config(yap_config)
-    lines = yapper.parser.parse(module_name='tests.mock_file',
+    astro = yapper.parser.parse(module_name='tests.mock_file',
                                 ast_module=ast_module,
                                 yap_config=merged_config)
-    assert lines.strip() == expected.lines_custom.strip()
+    assert astro.strip() == expected.lines_custom.strip()
 
 
 def test_main():
     # using the default config
-    yap_config = {
-        'package_root_relative_path': '..',
-        'module_map': {
-            'test.mock_file': {
-                'py': './tests/mock_file.py',
-                'astro': './tests/mock_default_file.astro'
-            }
-        }
-    }
-    yapper.main(yap_config)
+    args = yapper.arg_parser.parse_args(['--config', './.yap_config_basic.yaml'])
+    yap_config = yapper.load_config(args)
+    merged_config = yapper.process_config(yap_config)
+    yapper.main(merged_config)
     # verify the output file
-    with open('mock_default_file.astro') as astro_file:
+    with open('mock_basic_file.astro') as astro_file:
         assert astro_file.read().strip() == expected.astro_file_default.strip()
     # using the custom yap_config
-    args = yapper.arg_parser.parse_args(['--config', './.yap_config.yaml'])
+    args = yapper.arg_parser.parse_args(['--config', './.yap_config_custom.yaml'])
     yap_config = yapper.load_config(args)
     merged_config = yapper.process_config(yap_config)
     yapper.main(merged_config)

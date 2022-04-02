@@ -9,7 +9,7 @@ import ast
 import logging
 
 import docstring_parser
-from dominate import tags, util, dom_tag
+from dominate import tags, util, dom_tag, svg
 from slugify import slugify
 
 logging.basicConfig(level=logging.INFO)
@@ -20,11 +20,48 @@ logger = logging.getLogger(__name__)
 class Markdown(dom_tag.dom_tag):
     pass
 
+link_icon = f'''
+M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z
+'''
+
+
+def heading_linker(heading_level: str,
+                   heading_name: str,
+                   heading_cls: str):
+    """ """
+    if heading_level == 'h1':
+        h = tags.h1(id=slugify(heading_name),
+                    cls=heading_cls)
+    elif heading_level == 'h2':
+        h = tags.h2(id=slugify(heading_name),
+                    cls=heading_cls)
+    else:
+        raise NotImplementedError(f'Heading level {heading_level} is not implemented for linking.')
+    with h:
+        a = tags.a(aria_hidden='true',
+                   tab_index='-1',
+                   href=f'#{slugify(heading_name)}')
+        with a:
+            s = svg.svg(xmlns='http://www.w3.org/2000/svg',
+                        viewbox='0 0 20 20',
+                        ariaHidden='true',
+                        width='15px',
+                        height='15px',
+                        cls='heading-icon')
+            with s:
+                svg.path(d=link_icon,
+                         fill_rule='evenodd',
+                         clip_rule='evenodd')
+        util.text(heading_name)
+
+    return h
+
 
 def addMarkdown(content: str):
     """ """
     content = content.strip().strip('\n')
-    md = Markdown(content)
+    md = Markdown(content,
+                  cls='doc-str-content')
     return md
 
 
@@ -34,21 +71,22 @@ def process_class(ast_class: ast.ClassDef):
         return
     # build class fragment
     class_fragment = tags.section(cls='yap class')
-    with class_fragment:
-        tags.h2(ast_class.name,
-                cls='yap class-title',
-                id=slugify(ast_class.name))
+    class_fragment += heading_linker(heading_level='h2',
+                                     heading_name=ast_class.name,
+                                     heading_cls='yap class-title')
     # base classes
     for base in ast_class.bases:
         with class_fragment:
-            base_item = tags.p()
+            base_item = tags.p(cls='doc-str-content')
             with base_item:
                 util.text('Inherits from')
                 tags.a(base.id,
                        cls='yap class-base',
-                       href=f'#{slugify(ast_class.name)}')
+                       href=f'#{slugify(base.id)}')
                 util.text('.')
     # when the class is passed-in directly its name is captured in the member_name
+    methods = []
+    props = []
     for item in ast_class.body:
         if isinstance(item, ast.Expr):
             if isinstance(item.value, ast.Constant):
@@ -57,13 +95,7 @@ def process_class(ast_class: ast.ClassDef):
             else:
                 raise NotImplementedError
         elif isinstance(item, ast.AnnAssign):
-            with class_fragment:
-                tags.div(
-                    tags.div(item.target.id,
-                             cls='yap class-prop-def-name'),
-                    tags.div(item.annotation.id,
-                             cls='yap class-prop-def-type'),
-                    cls='yap class-prop-def')
+            props.append(item)
         elif isinstance(item, ast.FunctionDef):
             is_property = False
             for dec in item.decorator_list:
@@ -75,20 +107,44 @@ def process_class(ast_class: ast.ClassDef):
                 else:
                     raise NotImplementedError
             if is_property:
-                prop_type = ''
-                if hasattr(item, 'annotation'):
-                    prop_type = item.annotation.id
-                with class_fragment:
-                    tags.div(
-                        tags.div(item.name,
-                                 cls='yap class-prop-name'),
-                        tags.div(prop_type,
-                                 cls='yap class-prop-type'),
-                        cls='yap class-prop')
+                props.append(item)
             else:
-                with class_fragment:
-                    process_function(ast_function=item,
-                                     class_name=ast_class.name)
+                methods.append(item)
+    # process props
+    if len(props):
+        class_fragment = add_heading(doc_str_frag=class_fragment,
+                                     heading='Properties')
+    for prop in props:
+        if hasattr(prop, 'name'):
+            prop_name = prop.name
+        elif hasattr(prop, 'target'):
+            prop_name = prop.target.id
+        else:
+            raise NotImplementedError('Unable to extract property name.')
+        prop_type = ''
+        if hasattr(prop, 'annotation'):
+            prop_type = prop.annotation.id
+        prop_desc = ''
+        with class_fragment:
+            tags.div(
+                tags.div(
+                    tags.div(prop_name,
+                             cls='yap class-prop-def-name'),
+                    tags.div(prop_type,
+                             cls='yap class-prop-def-type'),
+                    cls='yap class-prop-def'),
+                tags.div(prop_desc,
+                         cls='yap class-prop-def-desc'),
+                cls='yap class-prop-elem-container')
+    # process methods
+    if len(methods):
+        class_fragment = add_heading(doc_str_frag=class_fragment,
+                                     heading='Methods')
+    for method in methods:
+        with class_fragment:
+            process_function(ast_function=method,
+                             class_name=ast_class.name)
+
     return class_fragment
 
 
@@ -270,10 +326,9 @@ def process_function(ast_function: ast.FunctionDef,
         func_name = f'{class_name}.{ast_function.name}'
     else:
         func_name = ast_function.name
-    with func_fragment:
-        tags.h2(func_name,
-                cls='yap func-title',
-                id=slugify(func_name))
+    func_fragment += heading_linker(heading_level='h2',
+                                    heading_name=func_name,
+                                    heading_cls='yap func-title')
     # extract parameters, types, defaults
     param_names = []
     param_types = []
@@ -324,16 +379,15 @@ def parse(module_name: str,
     """ """
     # start the DOM fragment
     dom_fragment = tags.div(cls='yap module')
-    with dom_fragment:
-        tags.h1(module_name,
-                cls='yap module-title',
-                id=slugify(module_name))
+    dom_fragment += heading_linker(heading_level='h1',
+                                   heading_name=module_name,
+                                   heading_cls='yap module-title')
     # module docstring
     module_docstring = ast.get_docstring(ast_module)
     if module_docstring is not None:
         with dom_fragment:
             tags.div(module_docstring.replace('\n', ' ').strip(),
-                     cls='yap doc-str')
+                     cls='yap doc-str-content')
     # iterate the module's members
     for item in ast_module.body:
         # process functions
