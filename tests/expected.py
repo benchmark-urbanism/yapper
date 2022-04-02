@@ -1,245 +1,805 @@
-lines_default = [
-    '# tests.mock\\_file\n\n',
-    '\n\n## mock\\_function\n\n',
-    '\n\n```py\nmock_function(param_a,\n              param_b=1)\n              -> int\n```\n\n',
-    'A mock function for testing purposes\n',
-    '\n\n#### Parameters\n\n',
-    '\n\n**param_a** _str_: A *test* _param_.\n\n',
-    '\n\n**param_b** _int_: Another *test* _param_.\n\n| col A |: col B |\n|=======|========|\n| boo   | baa    |\n\n',
-    '\n\n## **class** MockClass\n\n',
-    'A mock class for testing purposes.',
-    '\n\n## MockClass\n\n',
-    '\n\n```py\nMockClass(param_c=1.1,\n          param_d=0.9)\n```\n\n',
-    'Mock class initialisation\n',
-    '\n\n#### Parameters\n\n',
-    '\n\n**param_c** _float_: Yet another test param.\n\n',
-    '\n\n**param_d** _float_: And another.\n\n',
-    '\n\n#### MockClass.param\\_e\n\n',
-    'A property describing property param_e',
-    '\n\n## MockClass.hello\n\n',
-    '\n\n```py\nMockClass.hello()\n                -> str\n```\n\n',
-    'A random class method returning "hello"\n',
-    '\n\n#### Returns\n\n',
-    '\n\n**saying_hello**: A string saying "hello"\n\n'
-]
-
-lines_custom = [
-    '# tests.mock\\_file\n\n',
-    '\n\n## mock\\_function\n\n',
-    '\n\n<FuncSignature>\n<pre>\nmock_function(param_a,\n              param_b=1)\n              -> int\n</pre>\n</FuncSignature>\n\n',
-    'A mock function for testing purposes\n',
-    '\n\n<FuncHeading>Parameters</FuncHeading>\n\n',
-    "\n\n<FuncElement name='param_a' type='str'>\n\nA *test* _param_.\n\n</FuncElement>\n\n",
-    "\n\n<FuncElement name='param_b' type='int'>\n\nAnother *test* _param_.\n\n| col A |: col B |\n|=======|========|\n| boo   | baa    |\n\n</FuncElement>\n\n",
-    '\n\n## **class** MockClass\n\n',
-    'A mock class for testing purposes.',
-    '\n\n## MockClass\n\n',
-    '\n\n<FuncSignature>\n<pre>\nMockClass(param_c=1.1,\n          param_d=0.9)\n</pre>\n</FuncSignature>\n\n',
-    'Mock class initialisation\n',
-    '\n\n<FuncHeading>Parameters</FuncHeading>\n\n',
-    "\n\n<FuncElement name='param_c' type='float'>\n\nYet another test param.\n\n</FuncElement>\n\n",
-    "\n\n<FuncElement name='param_d' type='float'>\n\nAnd another.\n\n</FuncElement>\n\n",
-    '\n\n#### MockClass.param\\_e\n\n',
-    'A property describing property param_e',
-    '\n\n## MockClass.hello\n\n',
-    '\n\n<FuncSignature>\n<pre>\nMockClass.hello()\n                -> str\n</pre>\n</FuncSignature>\n\n',
-    'A random class method returning "hello"\n',
-    '\n\n<FuncHeading>Returns</FuncHeading>\n\n',
-    '\n\n<FuncElement name=\'saying_hello\'>\n\nA string saying "hello"\n\n</FuncElement>\n\n'
-]
-
-md_file_default = '''# tests.mock\_file
-
-
-
-## mock\_function
-
-
-
-```py
-mock_function(param_a,
-              param_b=1)
-              -> int
-```
-
-A mock function for testing purposes
-
-
-#### Parameters
-
-
-
-**param_a** _str_: A *test* _param_.
-
-
-
-**param_b** _int_: Another *test* _param_.
-
-| col A |: col B |
-|=======|========|
-| boo   | baa    |
-
-
-
-## **class** MockClass
-
-A mock class for testing purposes.
-
-## MockClass
-
-
-
-```py
-MockClass(param_c=1.1,
-          param_d=0.9)
-```
-
-Mock class initialisation
-
-
-#### Parameters
-
-
-
-**param_c** _float_: Yet another test param.
-
-
-
-**param_d** _float_: And another.
-
-
-
-#### MockClass.param\_e
-
-A property describing property param_e
-
-## MockClass.hello
-
-
-
-```py
-MockClass.hello()
-                -> str
-```
-
-A random class method returning "hello"
-
-
-#### Returns
-
-
-
-**saying_hello**: A string saying "hello"
-
-'''
-
-md_file_custom = '''# tests.mock\_file
-
-
-
-## mock\_function
-
-
-
-<FuncSignature>
-<pre>
-mock_function(param_a,
-              param_b=1)
-              -> int
-</pre>
-</FuncSignature>
-
-A mock function for testing purposes
-
-
-<FuncHeading>Parameters</FuncHeading>
-
-
-
-<FuncElement name='param_a' type='str'>
-
+lines_default = '''
+<div class="yap module">
+  <h1 class="yap module-title" id="tests-mock-file">tests.mock_file</h1>
+  <div class="yap doc-str">module docstring content more content</div>
+  <section class="yap func">
+    <h2 class="yap func-title" id="mock-function">mock_function</h2>
+    <div class="yap func-sig-content">
+      <div class="yap func-sig-title">
+        <div class="yap func-sig-start">mock_function(</div>
+        <div class="yap func-sig-params">
+          <div class="yap func-sig-param">param_a, </div>
+          <div class="yap func-sig-param">param_b=2</div>
+        </div>
+        <div class="yap func-sig-end">)</div>
+      </div>
+    </div>
+    <div class="yap doc-str-content">A mock function returning a sum of param_a and param_b if positive numbers, else None
+      <h3 class="yap doc-str-heading">Parameters</h3>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name">param_a</div>
+          <div class="yap doc-str-elem-type">int</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
 A *test* _param_.
-
-</FuncElement>
-
-
-
-<FuncElement name='param_b' type='int'>
-
+</Markdown></div>
+      </div>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name">param_b</div>
+          <div class="yap doc-str-elem-type">int | float</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
 Another *test* _param_.
 
 | col A |: col B |
-|=======|========|
+|-------|--------|
 | boo   | baa    |
+</Markdown></div>
+      </div>
+      <h3 class="yap doc-str-heading">Returns</h3>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name">summed_number</div>
+          <div class="yap doc-str-elem-type">int | float</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+The sum of _param_a_ and _param_b_.
+</Markdown></div>
+      </div>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name"></div>
+          <div class="yap doc-str-elem-type">None</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+None returned if values are negative.
+</Markdown></div>
+      </div>
+      <h3 class="yap doc-str-heading">Raises</h3>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name"></div>
+          <div class="yap doc-str-elem-type">ValueError</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+Raises value error if params are not numbers.
+</Markdown></div>
+      </div>
+      <div class="yap doc-str-meta">
+        <h3 class="yap doc-str-heading">Notes</h3><Markdown>
+```python
+print(mock_function(1, 2))
+# prints 3
+```
 
-</FuncElement>
+Random text
 
+_Random table_
 
-
-## **class** MockClass
-
-A mock class for testing purposes.
-
-## MockClass
-
-
-
-<FuncSignature>
-<pre>
-MockClass(param_c=1.1,
-          param_d=0.9)
-</pre>
-</FuncSignature>
-
-Mock class initialisation
-
-
-<FuncHeading>Parameters</FuncHeading>
-
-
-
-<FuncElement name='param_c' type='float'>
-
+| col A |: col B |
+|-------|--------|
+| boo   | baa    |
+</Markdown>
+      </div>
+    </div>
+  </section>
+  <section class="yap class">
+    <h2 class="yap class-title" id="parentclass">ParentClass</h2><Markdown>
+A parent class
+</Markdown>
+    <div class="yap class-prop-def">
+      <div class="yap class-prop-def-name">parent_prop</div>
+      <div class="yap class-prop-def-type">str</div>
+    </div>
+    <section class="yap func">
+      <h2 class="yap func-title" id="parentclass">ParentClass</h2>
+      <div class="yap func-sig-content">
+        <div class="yap func-sig-title">
+          <div class="yap func-sig-start">ParentClass(</div>
+          <div class="yap func-sig-params">
+            <div class="yap func-sig-param">**kwargs</div>
+          </div>
+          <div class="yap func-sig-end">)</div>
+        </div>
+      </div>
+      <div class="yap doc-str-content">Parent initialisation.
+        <h3 class="yap doc-str-heading">Parameters</h3>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">**kwargs</div>
+            <div class="yap doc-str-elem-type"></div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+Keyword args.
+</Markdown></div>
+        </div>
+      </div>
+    </section>
+  </section>
+  <section class="yap class">
+    <h2 class="yap class-title" id="childclass">ChildClass</h2><Markdown>
+A child class
+</Markdown>
+    <section class="yap func">
+      <h2 class="yap func-title" id="childclass">ChildClass</h2>
+      <div class="yap func-sig-content">
+        <div class="yap func-sig-title">
+          <div class="yap func-sig-start">ChildClass(</div>
+          <div class="yap func-sig-params">
+            <div class="yap func-sig-param">param_c=1.1, </div>
+            <div class="yap func-sig-param">param_d=0.9, </div>
+            <div class="yap func-sig-param">**kwargs</div>
+          </div>
+          <div class="yap func-sig-end">)</div>
+        </div>
+      </div>
+      <div class="yap doc-str-content">Child initialisation.
+        <h3 class="yap doc-str-heading">Parameters</h3>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">param_c</div>
+            <div class="yap doc-str-elem-type">float</div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
 Yet another test param.
-
-</FuncElement>
-
-
-
-<FuncElement name='param_d' type='float'>
-
+</Markdown></div>
+        </div>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">param_d</div>
+            <div class="yap doc-str-elem-type">float</div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
 And another.
-
-</FuncElement>
-
-
-
-#### MockClass.param\_e
-
-A property describing property param_e
-
-## MockClass.hello
-
-
-
-<FuncSignature>
-<pre>
-MockClass.hello()
-                -> str
-</pre>
-</FuncSignature>
-
-A random class method returning "hello"
-
-
-<FuncHeading>Returns</FuncHeading>
-
-
-
-<FuncElement name='saying_hello'>
-
+</Markdown></div>
+        </div>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">**kwargs</div>
+            <div class="yap doc-str-elem-type"></div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+Keyword args.
+</Markdown></div>
+        </div>
+      </div>
+    </section>
+    <div class="yap class-prop">
+      <div class="yap class-prop-name">param_e</div>
+      <div class="yap class-prop-type"></div>
+    </div>
+    <section class="yap func">
+      <h2 class="yap func-title" id="childclass-hello">ChildClass.hello</h2>
+      <div class="yap func-sig-content">
+        <div class="yap func-sig-title">
+          <div class="yap func-sig-start">ChildClass.hello(</div>
+          <div class="yap func-sig-params"></div>
+          <div class="yap func-sig-end">)</div>
+        </div>
+      </div>
+      <div class="yap doc-str-content">A random class method returning &quot;hello&quot;
+        <h3 class="yap doc-str-heading">Returns</h3>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">str</div>
+            <div class="yap doc-str-elem-type">saying_hello</div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
 A string saying "hello"
+</Markdown></div>
+        </div>
+      </div>
+    </section>
+  </section>
+</div>
+'''
 
-</FuncElement>
+lines_custom = '''
+---
+import { Markdown } from 'astro/components';
+import PageLayout from '../layouts/PageLayout.astro'
+---
 
+<PageLayout>
+<div class="yap module">
+  <h1 class="yap module-title" id="tests-mock-file">tests.mock_file</h1>
+  <div class="yap doc-str">module docstring content more content</div>
+  <section class="yap func">
+    <h2 class="yap func-title" id="mock-function">mock_function</h2>
+    <div class="yap func-sig-content">
+      <div class="yap func-sig-title">
+        <div class="yap func-sig-start">mock_function(</div>
+        <div class="yap func-sig-params">
+          <div class="yap func-sig-param">param_a, </div>
+          <div class="yap func-sig-param">param_b=2</div>
+        </div>
+        <div class="yap func-sig-end">)</div>
+      </div>
+    </div>
+    <div class="yap doc-str-content">A mock function returning a sum of param_a and param_b if positive numbers, else None
+      <h3 class="yap doc-str-heading">Parameters</h3>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name">param_a</div>
+          <div class="yap doc-str-elem-type">int</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+A *test* _param_.
+</Markdown></div>
+      </div>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name">param_b</div>
+          <div class="yap doc-str-elem-type">int | float</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+Another *test* _param_.
+
+| col A |: col B |
+|-------|--------|
+| boo   | baa    |
+</Markdown></div>
+      </div>
+      <h3 class="yap doc-str-heading">Returns</h3>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name">summed_number</div>
+          <div class="yap doc-str-elem-type">int | float</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+The sum of _param_a_ and _param_b_.
+</Markdown></div>
+      </div>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name"></div>
+          <div class="yap doc-str-elem-type">None</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+None returned if values are negative.
+</Markdown></div>
+      </div>
+      <h3 class="yap doc-str-heading">Raises</h3>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name"></div>
+          <div class="yap doc-str-elem-type">ValueError</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+Raises value error if params are not numbers.
+</Markdown></div>
+      </div>
+      <div class="yap doc-str-meta">
+        <h3 class="yap doc-str-heading">Notes</h3><Markdown>
+```python
+print(mock_function(1, 2))
+# prints 3
+```
+
+Random text
+
+_Random table_
+
+| col A |: col B |
+|-------|--------|
+| boo   | baa    |
+</Markdown>
+      </div>
+    </div>
+  </section>
+  <section class="yap class">
+    <h2 class="yap class-title" id="parentclass">ParentClass</h2><Markdown>
+A parent class
+</Markdown>
+    <div class="yap class-prop-def">
+      <div class="yap class-prop-def-name">parent_prop</div>
+      <div class="yap class-prop-def-type">str</div>
+    </div>
+    <section class="yap func">
+      <h2 class="yap func-title" id="parentclass">ParentClass</h2>
+      <div class="yap func-sig-content">
+        <div class="yap func-sig-title">
+          <div class="yap func-sig-start">ParentClass(</div>
+          <div class="yap func-sig-params">
+            <div class="yap func-sig-param">**kwargs</div>
+          </div>
+          <div class="yap func-sig-end">)</div>
+        </div>
+      </div>
+      <div class="yap doc-str-content">Parent initialisation.
+        <h3 class="yap doc-str-heading">Parameters</h3>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">**kwargs</div>
+            <div class="yap doc-str-elem-type"></div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+Keyword args.
+</Markdown></div>
+        </div>
+      </div>
+    </section>
+  </section>
+  <section class="yap class">
+    <h2 class="yap class-title" id="childclass">ChildClass</h2><Markdown>
+A child class
+</Markdown>
+    <section class="yap func">
+      <h2 class="yap func-title" id="childclass">ChildClass</h2>
+      <div class="yap func-sig-content">
+        <div class="yap func-sig-title">
+          <div class="yap func-sig-start">ChildClass(</div>
+          <div class="yap func-sig-params">
+            <div class="yap func-sig-param">param_c=1.1, </div>
+            <div class="yap func-sig-param">param_d=0.9, </div>
+            <div class="yap func-sig-param">**kwargs</div>
+          </div>
+          <div class="yap func-sig-end">)</div>
+        </div>
+      </div>
+      <div class="yap doc-str-content">Child initialisation.
+        <h3 class="yap doc-str-heading">Parameters</h3>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">param_c</div>
+            <div class="yap doc-str-elem-type">float</div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+Yet another test param.
+</Markdown></div>
+        </div>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">param_d</div>
+            <div class="yap doc-str-elem-type">float</div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+And another.
+</Markdown></div>
+        </div>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">**kwargs</div>
+            <div class="yap doc-str-elem-type"></div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+Keyword args.
+</Markdown></div>
+        </div>
+      </div>
+    </section>
+    <div class="yap class-prop">
+      <div class="yap class-prop-name">param_e</div>
+      <div class="yap class-prop-type"></div>
+    </div>
+    <section class="yap func">
+      <h2 class="yap func-title" id="childclass-hello">ChildClass.hello</h2>
+      <div class="yap func-sig-content">
+        <div class="yap func-sig-title">
+          <div class="yap func-sig-start">ChildClass.hello(</div>
+          <div class="yap func-sig-params"></div>
+          <div class="yap func-sig-end">)</div>
+        </div>
+      </div>
+      <div class="yap doc-str-content">A random class method returning &quot;hello&quot;
+        <h3 class="yap doc-str-heading">Returns</h3>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">str</div>
+            <div class="yap doc-str-elem-type">saying_hello</div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+A string saying "hello"
+</Markdown></div>
+        </div>
+      </div>
+    </section>
+  </section>
+</div>
+</PageLayout>
+'''
+
+astro_file_default = '''
+<div class="yap module">
+  <h1 class="yap module-title" id="test-mock-file">test.mock_file</h1>
+  <div class="yap doc-str">module docstring content more content</div>
+  <section class="yap func">
+    <h2 class="yap func-title" id="mock-function">mock_function</h2>
+    <div class="yap func-sig-content">
+      <div class="yap func-sig-title">
+        <div class="yap func-sig-start">mock_function(</div>
+        <div class="yap func-sig-params">
+          <div class="yap func-sig-param">param_a, </div>
+          <div class="yap func-sig-param">param_b=2</div>
+        </div>
+        <div class="yap func-sig-end">)</div>
+      </div>
+    </div>
+    <div class="yap doc-str-content">A mock function returning a sum of param_a and param_b if positive numbers, else None
+      <h3 class="yap doc-str-heading">Parameters</h3>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name">param_a</div>
+          <div class="yap doc-str-elem-type">int</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+A *test* _param_.
+</Markdown></div>
+      </div>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name">param_b</div>
+          <div class="yap doc-str-elem-type">int | float</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+Another *test* _param_.
+
+| col A |: col B |
+|-------|--------|
+| boo   | baa    |
+</Markdown></div>
+      </div>
+      <h3 class="yap doc-str-heading">Returns</h3>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name">summed_number</div>
+          <div class="yap doc-str-elem-type">int | float</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+The sum of _param_a_ and _param_b_.
+</Markdown></div>
+      </div>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name"></div>
+          <div class="yap doc-str-elem-type">None</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+None returned if values are negative.
+</Markdown></div>
+      </div>
+      <h3 class="yap doc-str-heading">Raises</h3>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name"></div>
+          <div class="yap doc-str-elem-type">ValueError</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+Raises value error if params are not numbers.
+</Markdown></div>
+      </div>
+      <div class="yap doc-str-meta">
+        <h3 class="yap doc-str-heading">Notes</h3><Markdown>
+```python
+print(mock_function(1, 2))
+# prints 3
+```
+
+Random text
+
+_Random table_
+
+| col A |: col B |
+|-------|--------|
+| boo   | baa    |
+</Markdown>
+      </div>
+    </div>
+  </section>
+  <section class="yap class">
+    <h2 class="yap class-title" id="parentclass">ParentClass</h2><Markdown>
+A parent class
+</Markdown>
+    <div class="yap class-prop-def">
+      <div class="yap class-prop-def-name">parent_prop</div>
+      <div class="yap class-prop-def-type">str</div>
+    </div>
+    <section class="yap func">
+      <h2 class="yap func-title" id="parentclass">ParentClass</h2>
+      <div class="yap func-sig-content">
+        <div class="yap func-sig-title">
+          <div class="yap func-sig-start">ParentClass(</div>
+          <div class="yap func-sig-params">
+            <div class="yap func-sig-param">**kwargs</div>
+          </div>
+          <div class="yap func-sig-end">)</div>
+        </div>
+      </div>
+      <div class="yap doc-str-content">Parent initialisation.
+        <h3 class="yap doc-str-heading">Parameters</h3>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">**kwargs</div>
+            <div class="yap doc-str-elem-type"></div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+Keyword args.
+</Markdown></div>
+        </div>
+      </div>
+    </section>
+  </section>
+  <section class="yap class">
+    <h2 class="yap class-title" id="childclass">ChildClass</h2><Markdown>
+A child class
+</Markdown>
+    <section class="yap func">
+      <h2 class="yap func-title" id="childclass">ChildClass</h2>
+      <div class="yap func-sig-content">
+        <div class="yap func-sig-title">
+          <div class="yap func-sig-start">ChildClass(</div>
+          <div class="yap func-sig-params">
+            <div class="yap func-sig-param">param_c=1.1, </div>
+            <div class="yap func-sig-param">param_d=0.9, </div>
+            <div class="yap func-sig-param">**kwargs</div>
+          </div>
+          <div class="yap func-sig-end">)</div>
+        </div>
+      </div>
+      <div class="yap doc-str-content">Child initialisation.
+        <h3 class="yap doc-str-heading">Parameters</h3>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">param_c</div>
+            <div class="yap doc-str-elem-type">float</div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+Yet another test param.
+</Markdown></div>
+        </div>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">param_d</div>
+            <div class="yap doc-str-elem-type">float</div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+And another.
+</Markdown></div>
+        </div>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">**kwargs</div>
+            <div class="yap doc-str-elem-type"></div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+Keyword args.
+</Markdown></div>
+        </div>
+      </div>
+    </section>
+    <div class="yap class-prop">
+      <div class="yap class-prop-name">param_e</div>
+      <div class="yap class-prop-type"></div>
+    </div>
+    <section class="yap func">
+      <h2 class="yap func-title" id="childclass-hello">ChildClass.hello</h2>
+      <div class="yap func-sig-content">
+        <div class="yap func-sig-title">
+          <div class="yap func-sig-start">ChildClass.hello(</div>
+          <div class="yap func-sig-params"></div>
+          <div class="yap func-sig-end">)</div>
+        </div>
+      </div>
+      <div class="yap doc-str-content">A random class method returning &quot;hello&quot;
+        <h3 class="yap doc-str-heading">Returns</h3>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">str</div>
+            <div class="yap doc-str-elem-type">saying_hello</div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+A string saying "hello"
+</Markdown></div>
+        </div>
+      </div>
+    </section>
+  </section>
+</div>
+'''
+
+astro_file_custom = '''
+---
+import { Markdown } from 'astro/components';
+import PageLayout from '../layouts/PageLayout.astro'
+---
+
+<PageLayout>
+<div class="yap module">
+  <h1 class="yap module-title" id="test-mock-file">test.mock_file</h1>
+  <div class="yap doc-str">module docstring content more content</div>
+  <section class="yap func">
+    <h2 class="yap func-title" id="mock-function">mock_function</h2>
+    <div class="yap func-sig-content">
+      <div class="yap func-sig-title">
+        <div class="yap func-sig-start">mock_function(</div>
+        <div class="yap func-sig-params">
+          <div class="yap func-sig-param">param_a, </div>
+          <div class="yap func-sig-param">param_b=2</div>
+        </div>
+        <div class="yap func-sig-end">)</div>
+      </div>
+    </div>
+    <div class="yap doc-str-content">A mock function returning a sum of param_a and param_b if positive numbers, else None
+      <h3 class="yap doc-str-heading">Parameters</h3>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name">param_a</div>
+          <div class="yap doc-str-elem-type">int</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+A *test* _param_.
+</Markdown></div>
+      </div>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name">param_b</div>
+          <div class="yap doc-str-elem-type">int | float</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+Another *test* _param_.
+
+| col A |: col B |
+|-------|--------|
+| boo   | baa    |
+</Markdown></div>
+      </div>
+      <h3 class="yap doc-str-heading">Returns</h3>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name">summed_number</div>
+          <div class="yap doc-str-elem-type">int | float</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+The sum of _param_a_ and _param_b_.
+</Markdown></div>
+      </div>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name"></div>
+          <div class="yap doc-str-elem-type">None</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+None returned if values are negative.
+</Markdown></div>
+      </div>
+      <h3 class="yap doc-str-heading">Raises</h3>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name"></div>
+          <div class="yap doc-str-elem-type">ValueError</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown>
+Raises value error if params are not numbers.
+</Markdown></div>
+      </div>
+      <div class="yap doc-str-meta">
+        <h3 class="yap doc-str-heading">Notes</h3><Markdown>
+```python
+print(mock_function(1, 2))
+# prints 3
+```
+
+Random text
+
+_Random table_
+
+| col A |: col B |
+|-------|--------|
+| boo   | baa    |
+</Markdown>
+      </div>
+    </div>
+  </section>
+  <section class="yap class">
+    <h2 class="yap class-title" id="parentclass">ParentClass</h2><Markdown>
+A parent class
+</Markdown>
+    <div class="yap class-prop-def">
+      <div class="yap class-prop-def-name">parent_prop</div>
+      <div class="yap class-prop-def-type">str</div>
+    </div>
+    <section class="yap func">
+      <h2 class="yap func-title" id="parentclass">ParentClass</h2>
+      <div class="yap func-sig-content">
+        <div class="yap func-sig-title">
+          <div class="yap func-sig-start">ParentClass(</div>
+          <div class="yap func-sig-params">
+            <div class="yap func-sig-param">**kwargs</div>
+          </div>
+          <div class="yap func-sig-end">)</div>
+        </div>
+      </div>
+      <div class="yap doc-str-content">Parent initialisation.
+        <h3 class="yap doc-str-heading">Parameters</h3>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">**kwargs</div>
+            <div class="yap doc-str-elem-type"></div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+Keyword args.
+</Markdown></div>
+        </div>
+      </div>
+    </section>
+  </section>
+  <section class="yap class">
+    <h2 class="yap class-title" id="childclass">ChildClass</h2><Markdown>
+A child class
+</Markdown>
+    <section class="yap func">
+      <h2 class="yap func-title" id="childclass">ChildClass</h2>
+      <div class="yap func-sig-content">
+        <div class="yap func-sig-title">
+          <div class="yap func-sig-start">ChildClass(</div>
+          <div class="yap func-sig-params">
+            <div class="yap func-sig-param">param_c=1.1, </div>
+            <div class="yap func-sig-param">param_d=0.9, </div>
+            <div class="yap func-sig-param">**kwargs</div>
+          </div>
+          <div class="yap func-sig-end">)</div>
+        </div>
+      </div>
+      <div class="yap doc-str-content">Child initialisation.
+        <h3 class="yap doc-str-heading">Parameters</h3>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">param_c</div>
+            <div class="yap doc-str-elem-type">float</div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+Yet another test param.
+</Markdown></div>
+        </div>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">param_d</div>
+            <div class="yap doc-str-elem-type">float</div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+And another.
+</Markdown></div>
+        </div>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">**kwargs</div>
+            <div class="yap doc-str-elem-type"></div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+Keyword args.
+</Markdown></div>
+        </div>
+      </div>
+    </section>
+    <div class="yap class-prop">
+      <div class="yap class-prop-name">param_e</div>
+      <div class="yap class-prop-type"></div>
+    </div>
+    <section class="yap func">
+      <h2 class="yap func-title" id="childclass-hello">ChildClass.hello</h2>
+      <div class="yap func-sig-content">
+        <div class="yap func-sig-title">
+          <div class="yap func-sig-start">ChildClass.hello(</div>
+          <div class="yap func-sig-params"></div>
+          <div class="yap func-sig-end">)</div>
+        </div>
+      </div>
+      <div class="yap doc-str-content">A random class method returning &quot;hello&quot;
+        <h3 class="yap doc-str-heading">Returns</h3>
+        <div class="yap doc-str-elem-container">
+          <div class="yap doc-str-elem-def">
+            <div class="yap doc-str-elem-name">str</div>
+            <div class="yap doc-str-elem-type">saying_hello</div>
+          </div>
+          <div class="yap doc-str-elem-desc"><Markdown>
+A string saying "hello"
+</Markdown></div>
+        </div>
+      </div>
+    </section>
+  </section>
+</div>
+</PageLayout>
 '''

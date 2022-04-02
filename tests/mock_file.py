@@ -18,7 +18,7 @@ def mock_function(param_a: int,
         Another *test* _param_.
 
         | col A |: col B |
-        |=======|========|
+        |-------|--------|
         | boo   | baa    |
 
     Returns
@@ -45,7 +45,7 @@ def mock_function(param_a: int,
     _Random table_
 
     | col A |: col B |
-    |=======|========|
+    |-------|--------|
     | boo   | baa    |
 
     """

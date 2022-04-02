@@ -42,62 +42,140 @@ def test_process_config():
     # should raise if module_map not provided
     with pytest.raises(KeyError):
         yapper.process_config({})
+    # should raise if module map is not a dictionary or an empty dict
+    with pytest.raises(TypeError):
+        yapper.process_config({'module_map': None})
+    with pytest.raises(TypeError):
+        yapper.process_config({'module_map': {}})
+    # should raise if keys are not strings or values are not dicts
+    with pytest.raises(KeyError):
+        yapper.process_config({
+            'boo': 'baa',
+            0: {
+                'some.module': {
+                    'py': 'boo.py',
+                    'astro': 'baa.astro'
+                }
+            }
+        })
+    with pytest.raises(TypeError):
+        yapper.process_config({
+            'boo': 'baa',
+            'module_map': {
+                'some.module': 'not a dict'
+            }
+        })
+    # should raise if py or astro keys are missing
+    with pytest.raises(KeyError):
+        yapper.process_config({
+            'boo': 'baa',
+            'module_map': {
+                'some.module': {
+                    '-': 'boo.py',
+                    'astro': 'baa.astro'
+                }
+            }
+        })
+    with pytest.raises(KeyError):
+        yapper.process_config({
+            'boo': 'baa',
+            'module_map': {
+                'some.module': {
+                    'py': 'boo.py',
+                    '-': 'baa.astro'
+                }
+            }
+        })
+    # should raise if file endings are not valid
+    with pytest.raises(ValueError):
+        yapper.process_config({
+            'boo': 'baa',
+            'module_map': {
+                'some.module': {
+                    'py': 'boo',
+                    'astro': 'baa.astro'
+                }
+            }
+        })
+    with pytest.raises(ValueError):
+        yapper.process_config({
+            'boo': 'baa',
+            'module_map': {
+                'some.module': {
+                    'py': 'boo.py',
+                    'astro': 'baa'
+                }
+            }
+        })
     # should raise if invalid key provided
     with pytest.raises(KeyError):
         yapper.process_config({
             'boo': 'baa',
-            'module_map': None
+            'module_map': {
+                'some.module': {
+                    'py': 'boo.py',
+                    'astro': 'baa.astro'
+                }
+            }
         })
     # should replace default keys with custom keys
     # use deep copies
-    ytc = copy.deepcopy(yap_clean_config)
-    for k in ytc.keys():
-        yap_config = copy.deepcopy(ytc)
-        yap_config['module_map'] = None
+    config_template = {
+        'package_root_relative_path': '.',
+        'intro_template': None,
+        'outro_template': None,
+        'module_map': {
+            'some.module': {
+                'py': 'boo.py',
+                'astro': 'baa.astro'
+            }
+        }
+    }
+    for k in ['package_root_relative_path', 'intro_template', 'outro_template']:
+        yap_config = copy.deepcopy(config_template)
         yap_config[k] = 'boo'
         merged_config = yapper.process_config(yap_config)
         assert merged_config[k] == 'boo'
-        for mk in merged_config.keys():
-            if mk == k:
-                assert merged_config[mk] != ytc[mk]
-            else:
-                assert merged_config[mk] == ytc[mk]
 
 
 def test_parse():
-    module_path = Path('../tests/mock_file.py')
-    mock_file = open(module_path)
+    file_path = Path('../tests/mock_file.py')
+    mock_file = open(file_path)
     ast_module = ast.parse(mock_file.read())
     # using the basic config
-    lines = yapper.parser.parse(module_path=module_path,
+    lines = yapper.parser.parse(module_name='tests.mock_file',
                                 ast_module=ast_module,
                                 yap_config=yap_clean_config)
-    assert lines == expected.lines_default
+    assert lines.strip() == expected.lines_default.strip()
     # using the custom config
     args = yapper.arg_parser.parse_args(['--config', './.yap_config.yaml'])
     yap_config = yapper.load_config(args)
     merged_config = yapper.process_config(yap_config)
-    lines = yapper.parser.parse(module_path=module_path,
+    lines = yapper.parser.parse(module_name='tests.mock_file',
                                 ast_module=ast_module,
                                 yap_config=merged_config)
-    assert lines == expected.lines_custom
+    assert lines.strip() == expected.lines_custom.strip()
 
 
 def test_main():
     # using the default config
-    yap_config = copy.deepcopy(yap_clean_config)
-    yap_config['module_map'] = {
-        'tests.mock_file': 'mock_default_file.md'
+    yap_config = {
+        'package_root_relative_path': '..',
+        'module_map': {
+            'test.mock_file': {
+                'py': './tests/mock_file.py',
+                'astro': './tests/mock_default_file.astro'
+            }
+        }
     }
-    print(yap_config)
     yapper.main(yap_config)
     # verify the output file
-    with open('./mock_default_file.md') as md_file:
-        assert md_file.read() == expected.md_file_default
+    with open('mock_default_file.astro') as astro_file:
+        assert astro_file.read().strip() == expected.astro_file_default.strip()
     # using the custom yap_config
     args = yapper.arg_parser.parse_args(['--config', './.yap_config.yaml'])
     yap_config = yapper.load_config(args)
     merged_config = yapper.process_config(yap_config)
     yapper.main(merged_config)
-    with open('./mock_custom_file.md') as md_file:
-        assert md_file.read() == expected.md_file_custom
+    with open('mock_custom_file.astro') as astro_file:
+        assert astro_file.read().strip() == expected.astro_file_custom.strip()

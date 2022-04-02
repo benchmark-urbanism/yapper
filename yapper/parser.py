@@ -1,145 +1,95 @@
 """
-Uses AST and docstring_parser to parse docstrings to html & markdown.
+Uses AST and docstring_parser to parse docstrings to .astro files.
 
-Intended for use with static site generators where further linting / linking / styling is done downstream.
-
-Loosely based on Numpy-style docstrings.
-
-Automatically infers types from signature typehints.
-By design, explicitly documented types are NOT supported in docstrings.
+Intended for use with the Astro static site generator where further linting / linking / styling is done downstream.
 """
 from __future__ import annotations
 
 import ast
 import logging
-from markdown import markdown
-import pathlib
 
 import docstring_parser
-from dominate import tags, util
+from dominate import tags, util, dom_tag
 from slugify import slugify
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-line_break_chars = ['-', '_', '!', '|', '>', ':']
+
+# custom class for markdown
+class Markdown(dom_tag.dom_tag):
+    pass
 
 
-def extract_text_block(splits_enum, splits, indented_block=False, is_hint_block=False):
-    """
-    Parses a block of text and decides whether or not to wrap.
-    Return if iters finish or on end of indentation (optional) or on start of new heading
-    """
-    block = []
-    while True:
-        # feed
-        lookahead_idx, next_line = next(splits_enum)
-        # return if indented block and next is not indented (but don't get tripped up with empty lines)
-        if indented_block and not next_line.startswith(' ') and not next_line.strip() == '':
-            return lookahead_idx, next_line, '\n'.join(block)
-        # return if the next next-line would be a new heading
-        elif lookahead_idx < len(splits) and splits[lookahead_idx].startswith('---'):
-            return lookahead_idx, next_line, '\n'.join(block)
-        # return if inside a hint block and the end of the hint block has been encountered
-        elif is_hint_block and next_line.strip().startswith(':::'):
-            return lookahead_idx, next_line, '\n'.join(block)
-        # be careful with stripping content for lines with intentional breaks, e.g. indented bullets...
-        # if parsing indented blocks, strip the first four spaces
-        if indented_block:
-            next_line = next_line[4:]
-        # code blocks
-        if next_line.strip().startswith('```'):
-            code_block = next_line.strip() + '\n'
-            while True:
-                lookahead_idx, next_line = next(splits_enum)
-                if indented_block:
-                    next_line = next_line[4:]
-                code_block += next_line + '\n'
-                if next_line.startswith('```'):
-                    break
-            block.append(code_block)
-        # tip blocks
-        elif next_line.strip().startswith(':::'):
-            hint_in = '\n' + next_line.strip() + '\n\n'
-            # unpacks hint block
-            lookahead_idx, next_line, hint_block = extract_text_block(splits_enum,
-                                                                      splits,
-                                                                      indented_block=indented_block,
-                                                                      is_hint_block=True)
-            # next line will be closing characters, i.e. ':::', insert manually to add newline
-            block.append(hint_in + hint_block + '\n:::')
-        # if no block content exists yet
-        elif not len(block):
-            block.append(next_line)
-        # keep blank lines
-        elif next_line.strip() == '':
-            block.append('')
-        # don't wrap if the previous line is blank
-        elif block[-1] == '':
-            block.append(next_line)
-        # don't wrap if the line starts with a bullet point, picture, or table character
-        elif next_line.strip()[0] in line_break_chars:
-            block.append(next_line)
-        # or if the previous line ends with a bullet point, picture, or table character
-        elif block[-1].strip()[-1] in line_break_chars:
-            block.append(next_line)
-        # otherwise wrap
-        else:
-            # should be safe to strip text when wrapping
-            block[-1] += ' ' + next_line.strip()
-        # return if iters exhausted
-        if lookahead_idx == len(splits):
-            return lookahead_idx, next_line, '\n'.join(block)
+def addMarkdown(content: str):
+    """ """
+    content = content.strip().strip('\n')
+    md = Markdown(content)
+    return md
 
 
 def process_class(ast_class: ast.ClassDef):
     """ """
-    if ast_class is not None:
-        class_fragment = tags.section(cls='yap class')
-        class_fragment.appendChild(tags.h2(ast_class.name,
-                                           cls='yap class-title',
-                                           id=slugify(ast_class.name)))
-        # when the class is passed-in directly its name is captured in the member_name
-        for item in ast_class.body:
-            if isinstance(item, ast.Expr):
-                if isinstance(item.value, ast.Constant):
-                    desc = item.value.value.strip().lstrip('\n').rstrip('\n')
-                    class_fragment.appendChild(util.raw(markdown(desc,
-                                                                 extensions=['extra', 'nl2br', 'sane_lists', 'smarty'])))
-                else:
-                    raise NotImplementedError
-            elif isinstance(item, ast.AnnAssign):
-                class_fragment.appendChild(tags.div(
+    if ast_class is None:
+        return
+    # build class fragment
+    class_fragment = tags.section(cls='yap class')
+    with class_fragment:
+        tags.h2(ast_class.name,
+                cls='yap class-title',
+                id=slugify(ast_class.name))
+    # base classes
+    for base in ast_class.bases:
+        with class_fragment:
+            base_item = tags.p()
+            with base_item:
+                util.text('Inherits from')
+                tags.a(base.id,
+                       cls='yap class-base',
+                       href=f'#{slugify(ast_class.name)}')
+                util.text('.')
+    # when the class is passed-in directly its name is captured in the member_name
+    for item in ast_class.body:
+        if isinstance(item, ast.Expr):
+            if isinstance(item.value, ast.Constant):
+                desc = item.value.value.strip().lstrip('\n').rstrip('\n')
+                class_fragment += addMarkdown(desc)
+            else:
+                raise NotImplementedError
+        elif isinstance(item, ast.AnnAssign):
+            with class_fragment:
+                tags.div(
                     tags.div(item.target.id,
                              cls='yap class-prop-def-name'),
                     tags.div(item.annotation.id,
                              cls='yap class-prop-def-type'),
-                    cls='yap class-prop-def'))
-            elif isinstance(item, ast.FunctionDef):
-                is_property = False
-                for dec in item.decorator_list:
-                    if isinstance(dec, ast.Name):
-                        if dec.id == 'property':
-                            is_property = True
-                        else:
-                            raise NotImplementedError
+                    cls='yap class-prop-def')
+        elif isinstance(item, ast.FunctionDef):
+            is_property = False
+            for dec in item.decorator_list:
+                if isinstance(dec, ast.Name):
+                    if dec.id == 'property':
+                        is_property = True
                     else:
                         raise NotImplementedError
-                if is_property:
-                    prop_type = ''
-                    if hasattr(item, 'annotation'):
-                        prop_type = item.annotation.id
-                    class_fragment.appendChild(tags.div(
+                else:
+                    raise NotImplementedError
+            if is_property:
+                prop_type = ''
+                if hasattr(item, 'annotation'):
+                    prop_type = item.annotation.id
+                with class_fragment:
+                    tags.div(
                         tags.div(item.name,
                                  cls='yap class-prop-name'),
                         tags.div(prop_type,
                                  cls='yap class-prop-type'),
-                        cls='yap class-prop'))
-                else:
-                    class_fragment.appendChild(
-                        process_function(ast_function=item,
-                                         class_name=ast_class.name))
-        return class_fragment
+                        cls='yap class-prop')
+            else:
+                with class_fragment:
+                    process_function(ast_function=item,
+                                     class_name=ast_class.name)
+    return class_fragment
 
 
 def process_signature(func_name: str,
@@ -147,10 +97,9 @@ def process_signature(func_name: str,
                       param_defaults: list[str]):
     """ """
     # process signature
-    sig_fragment = tags.div(cls='yap func-sig-title')
-    sig_fragment.appendChild(
-        tags.div(f'{func_name}(',
-                 cls='yap func-sig-start'))
+    sig_fragment = tags.div(cls='yap func-sig')
+    with sig_fragment:
+        tags.span(f'{func_name}(')
     # nest sig params for CSS alignment
     sig_params_fragment = tags.div(cls='yap func-sig-params')
     for idx, (param_name, param_default) in enumerate(zip(param_names, param_defaults)):
@@ -159,23 +108,23 @@ def process_signature(func_name: str,
             param += f'={param_default}'
         if idx < len(param_names) - 1:
             param += ', '
-        sig_params_fragment.appendChild(
+        with sig_params_fragment:
             tags.div(param,
-                     cls='yap func-sig-param'))
+                     cls='yap func-sig-param')
+    sig_fragment += sig_params_fragment
     # close the signature
-    sig_fragment.appendChild(sig_params_fragment)
-    sig_fragment.appendChild(
-        tags.div(')',
-                 cls='yap func-sig-end'))
+    with sig_fragment:
+        tags.span(')')
     return sig_fragment
 
 
 def add_heading(doc_str_frag: tags.div,
                 heading: str):
     """ """
-    return doc_str_frag.appendChild(
-        tags.h2(heading,
-                cls='yap doc-str-heading'))
+    with doc_str_frag:
+        tags.h3(heading,
+                cls='yap doc-str-heading')
+    return doc_str_frag
 
 
 def add_param_set(doc_str_frag: tags.div,
@@ -189,7 +138,7 @@ def add_param_set(doc_str_frag: tags.div,
         param_types_str = 'None'
     else:
         param_types_str = ' | '.join(param_type)
-    return doc_str_frag.appendChild(
+    with doc_str_frag:
         tags.div(
             tags.div(
                 tags.div(param_name,
@@ -198,9 +147,12 @@ def add_param_set(doc_str_frag: tags.div,
                          cls='yap doc-str-elem-type'),
                 cls='yap doc-str-elem-def'
             ),
-            util.raw(markdown(param_description,
-                              extensions=['extra', 'nl2br', 'sane_lists', 'smarty'])),
-            cls='yap doc-str-elem-container'))
+            tags.div(
+                addMarkdown(param_description),
+                cls='yap doc-str-elem-desc'
+            ),
+            cls='yap doc-str-elem-container')
+    return doc_str_frag
 
 
 def process_docstring(doc_str: str | None,
@@ -212,10 +164,9 @@ def process_docstring(doc_str: str | None,
     if doc_str is not None:
         parsed_doc_str = docstring_parser.parse(doc_str)
         if parsed_doc_str.short_description is not None:
-            doc_str_frag.appendChild(parsed_doc_str.short_description)
+            doc_str_frag += addMarkdown(parsed_doc_str.short_description)
         if parsed_doc_str.long_description is not None:
-            doc_str_frag.appendChild(util.raw(markdown(parsed_doc_str.long_description,
-                                                       extensions=['extra', 'nl2br', 'sane_lists', 'smarty'])))
+            doc_str_frag += addMarkdown(parsed_doc_str.long_description)
         if (len(param_names) and parsed_doc_str.params is None) or (len(param_names) != len(parsed_doc_str.params)):
             raise ValueError('Number of docstring params does not match number of signature params')
         if parsed_doc_str.params is not None and len(parsed_doc_str.params):
@@ -281,14 +232,14 @@ def process_docstring(doc_str: str | None,
             metas_frag = add_heading(doc_str_frag=metas_frag,
                                      heading='Notes')
             for meta in metas:
-                metas_frag.appendChild(util.raw(markdown(meta.description,
-                                                         extensions=['extra', 'nl2br', 'sane_lists', 'smarty'])))
-            doc_str_frag.appendChild(metas_frag)
+                metas_frag += addMarkdown(meta.description)
+            doc_str_frag += metas_frag
 
     return doc_str_frag
 
 
-def extract_types(ast_types: list[str], ast_return: ast.BinOp | ast.Name):
+def extract_types(ast_types: list[str],
+                  ast_return: ast.BinOp | ast.Name):
     """ """
     if isinstance(ast_return, ast.Name):
         ast_types.append(ast_return.id)
@@ -319,9 +270,10 @@ def process_function(ast_function: ast.FunctionDef,
         func_name = f'{class_name}.{ast_function.name}'
     else:
         func_name = ast_function.name
-    func_fragment.appendChild(tags.h2(func_name,
-                                      cls='yap func-title',
-                                      id=slugify(func_name)))
+    with func_fragment:
+        tags.h2(func_name,
+                cls='yap func-title',
+                id=slugify(func_name))
     # extract parameters, types, defaults
     param_names = []
     param_types = []
@@ -347,54 +299,56 @@ def process_function(ast_function: ast.FunctionDef,
     # extract return types
     return_types = []
     if isinstance(ast_function.returns, (ast.BinOp, ast.Name)):
-        extract_types(ast_types=return_types, ast_return=ast_function.returns)
+        extract_types(ast_types=return_types,
+                      ast_return=ast_function.returns)
     # process signature
-    sig_fragment = process_signature(func_name=func_name,
-                                     param_names=param_names,
-                                     param_defaults=param_defaults)
-    func_fragment.appendChild(tags.div(cls='yap func-sig-content').appendChild(sig_fragment))
+    with func_fragment:
+        tags.div(cls='yap func-sig-content').appendChild(
+            process_signature(func_name=func_name,
+                              param_names=param_names,
+                              param_defaults=param_defaults))
     # process docstring
     doc_str = ast.get_docstring(ast_function)
-    doc_str_fragment = process_docstring(doc_str=doc_str,
-                                         param_names=param_names,
-                                         param_types=param_types,
-                                         return_types=return_types)
-    func_fragment.appendChild(doc_str_fragment)
+    func_fragment.appendChild(
+        process_docstring(doc_str=doc_str,
+                          param_names=param_names,
+                          param_types=param_types,
+                          return_types=return_types))
 
     return func_fragment
 
 
-def parse(module_path: pathlib.Path,
+def parse(module_name: str,
           ast_module: ast.Module,
           yap_config: dict):
     """ """
-    # module name
-    module_str = str(module_path)
-    module_str = module_str.rstrip('.py')
-    path_splits = module_str.split('/')
-    path_splits = [ps for ps in path_splits if ps not in ['..', '.']]
-    path_text = '.'.join(path_splits)
     # start the DOM fragment
     dom_fragment = tags.div(cls='yap module')
-    # add
-    dom_fragment.appendChild(tags.h1(path_text,
-                                     cls='yap module-title',
-                                     id=slugify(path_text)))
+    with dom_fragment:
+        tags.h1(module_name,
+                cls='yap module-title',
+                id=slugify(module_name))
     # module docstring
     module_docstring = ast.get_docstring(ast_module)
     if module_docstring is not None:
-        dom_fragment.appendChild(
+        with dom_fragment:
             tags.div(module_docstring.replace('\n', ' ').strip(),
-                     cls='yap doc-str'))
+                     cls='yap doc-str')
     # iterate the module's members
     for item in ast_module.body:
         # process functions
         if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            func_fragment = process_function(item)
-            dom_fragment.appendChild(func_fragment)
+            dom_fragment += process_function(item)
         # process classes and nested methods
         elif isinstance(item, ast.ClassDef):
-            class_fragment = process_class(item)
-            dom_fragment.appendChild(class_fragment)
+            dom_fragment += process_class(item)
+    astro = ''
+    if yap_config['intro_template'] is not None:
+        for line in yap_config['intro_template'].split('\n'):
+            astro += f'{line.strip()}\n'
+    astro += dom_fragment.render().strip()
+    if yap_config['outro_template'] is not None:
+        for line in yap_config['outro_template'].split('\n'):
+            astro += f'{line.strip()}\n'
 
-    return dom_fragment
+    return astro
