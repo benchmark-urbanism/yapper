@@ -2,6 +2,10 @@
 /tests/mock_basic_file.astro
 /tests/mock_custom_file.astro
 
+# pdm
+.pdm.toml
+__pypackages__/
+
 # pycharm
 .idea
 
