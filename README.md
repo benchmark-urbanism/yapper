@@ -171,3 +171,17 @@ PythonShell.run('__init__.py', options, function (err) {
   }
 }
 ```
+
+## Dev Setup
+
+```bash
+brew install pdm
+pdm --pep582 >> ~/.zshrc
+brew install zsh-completions
+mkdir ~/.zfunc
+pdm completion zsh > ~/.zfunc/_pdm
+pdm plugin add pdm-publish
+pdm init
+pdm run tests
+pdm run publish
+```

@@ -59,8 +59,10 @@ def heading_linker(heading_level: str,
 
 def addMarkdown(content: str):
     """ """
-    content = content.strip().strip('\n')
-    md = Markdown(content,
+    content_str = ''
+    if content is not None:
+        content_str = content.strip().strip('\n')
+    md = Markdown(content_str,
                   cls='doc-str-content')
     return md
 
@@ -93,7 +95,7 @@ def process_class(ast_class: ast.ClassDef):
                 desc = item.value.value.strip().lstrip('\n').rstrip('\n')
                 class_fragment += addMarkdown(desc)
             else:
-                raise NotImplementedError
+                raise NotImplementedError(f'Unable to process item: {type(item)}')
         elif isinstance(item, ast.AnnAssign):
             props.append(item)
         elif isinstance(item, ast.FunctionDef):
@@ -103,9 +105,11 @@ def process_class(ast_class: ast.ClassDef):
                     if dec.id == 'property':
                         is_property = True
                     else:
-                        raise NotImplementedError
+                        raise NotImplementedError(f'Unable to process decorator: {dec}')
+                elif isinstance(dec, ast.Attribute) and dec.attr == 'setter':
+                    logger.warning(f'Skipping setter for {item.name}')
                 else:
-                    raise NotImplementedError
+                    raise NotImplementedError(f'Unable to process decorator: {dec}')
             if is_property:
                 props.append(item)
             else:
@@ -117,10 +121,10 @@ def process_class(ast_class: ast.ClassDef):
     for prop in props:
         if hasattr(prop, 'name'):
             prop_name = prop.name
-        elif hasattr(prop, 'target'):
+        elif hasattr(prop, 'target') and hasattr(prop.target, 'id'):
             prop_name = prop.target.id
         else:
-            raise NotImplementedError('Unable to extract property name.')
+            NotImplementedError(f'Unable to extract property name from: {prop}')
         prop_type = ''
         if hasattr(prop, 'annotation'):
             prop_type = prop.annotation.id
@@ -174,7 +178,7 @@ def process_signature(func_name: str,
     return sig_fragment
 
 
-def add_heading(doc_str_frag: tags.div,
+def add_heading(doc_str_frag: tags.dom_tag,
                 heading: str):
     """ """
     with doc_str_frag:
@@ -220,18 +224,24 @@ def process_docstring(doc_str: str | None,
     if doc_str is not None:
         parsed_doc_str = docstring_parser.parse(doc_str)
         if parsed_doc_str.short_description is not None:
-            doc_str_frag += addMarkdown(parsed_doc_str.short_description)
-        if parsed_doc_str.long_description is not None:
-            doc_str_frag += addMarkdown(parsed_doc_str.long_description)
+            desc = parsed_doc_str.short_description
+            if parsed_doc_str.long_description is not None:
+                desc += parsed_doc_str.long_description
+            doc_str_frag += addMarkdown(desc)
         if (len(param_names) and parsed_doc_str.params is None) or (len(param_names) != len(parsed_doc_str.params)):
-            raise ValueError('Number of docstring params does not match number of signature params')
+            raise ValueError(f'''
+            Number of docstring params does not match number of signature params:
+            signature paramters: {param_names}
+            parsed doc-str params: {parsed_doc_str.params}
+            ''')
         if parsed_doc_str.params is not None and len(parsed_doc_str.params):
             doc_str_frag = add_heading(doc_str_frag=doc_str_frag,
                                        heading='Parameters')
             for idx, param in enumerate(parsed_doc_str.params):
                 param_name = param.arg_name
-                if param_name == 'kwargs':
-                    param_name = '**kwargs'
+                if 'kwargs' in param_name:
+                    param_name = param_name.lstrip('**')
+                    param_name = f'**{param_name}'
                 try:
                     param_idx = param_names.index(param_name)
                 except ValueError:
@@ -265,7 +275,12 @@ def process_docstring(doc_str: str | None,
                                              param_description=doc_str_return.description)
         # if types were provided in both the signature and the docstring, check that these match
         if len(doc_str_return_types) and len(return_types) and not len(doc_str_return_types) == len(return_types):
-            raise ValueError('Mismatching number of return types in docstring vs. function signature.')
+            raise ValueError(f'''
+            Mismatching number of return types in docstring vs. function signature:
+            paramters: {param_names}
+            types per signature: {return_types}
+            types per doc-str: {doc_str_return_types}
+            ''')
         if len(parsed_doc_str.raises):
             doc_str_frag = add_heading(doc_str_frag=doc_str_frag,
                                        heading='Raises')
@@ -392,6 +407,8 @@ def parse(module_name: str,
     for item in ast_module.body:
         # process functions
         if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if item.name.startswith('_'):
+                continue
             dom_fragment += process_function(item)
         # process classes and nested methods
         elif isinstance(item, ast.ClassDef):

@@ -73,6 +73,10 @@ class ParentClass:
         """
         self.parent_prop = 'bee'
 
+    def _boo(self):
+        """ should be ignored """
+        pass
+
 
 class ChildClass(ParentClass):
     """
