@@ -19,7 +19,8 @@ def mock_function(param_a: int,
 
         | col A |: col B |
         |-------|--------|
-        | boo   | baa    |
+        | boo   | baa
+        more content across broken line|
 
     Returns
     -------

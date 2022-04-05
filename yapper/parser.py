@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 class Markdown(dom_tag.dom_tag):
     pass
 
+
 link_icon = f'''
 M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z
 '''
@@ -57,14 +58,51 @@ def heading_linker(heading_level: str,
     return h
 
 
-def addMarkdown(content: str):
+def weld_candidate(text_a: str, text_b: str) -> bool:
+    """ """
+    if text_a is None or text_a == '':
+        return False
+    if text_b is None or text_b == '':
+        return False
+    for c in ['|', ':']:
+        if text_a.endswith(c):
+            return False
+        if text_b.startswith(c):
+            return False
+    return True
+
+
+def addMarkdown(fragment: tags.dom_tag,
+                text: str):
     """ """
     content_str = ''
-    if content is not None:
-        content_str = content.strip().strip('\n')
-    md = Markdown(content_str,
+    if text is not None:
+        content_str = text.strip().strip('\n')
+    splits = content_str.split('\n')
+    is_pre = False
+    text = ''
+    for idx in range(len(splits)):
+        next_line = splits[idx].strip()
+        if '```' in next_line:
+            if not is_pre:
+                is_pre = True
+            else:
+                is_pre = False
+            text += f'\n{next_line}'
+        elif is_pre:
+            text += f'\n{next_line}'
+        elif weld_candidate(text, next_line):
+            text += f' {next_line}'
+        else:
+            text += f'\n{next_line}'
+    if is_pre:
+        raise ValueError(f'Unclosed code block encountered for content: \n{text}')
+    text += '\n'
+    md = Markdown(text,
                   cls='doc-str-content')
-    return md
+    # add is:raw directive
+    fragment += util.raw(md.render().replace('">', '" is:raw>'))
+    return fragment
 
 
 def process_class(ast_class: ast.ClassDef):
@@ -93,7 +131,8 @@ def process_class(ast_class: ast.ClassDef):
         if isinstance(item, ast.Expr):
             if isinstance(item.value, ast.Constant):
                 desc = item.value.value.strip().lstrip('\n').rstrip('\n')
-                class_fragment += addMarkdown(desc)
+                class_fragment = addMarkdown(fragment=class_fragment,
+                                             text=desc)
             else:
                 raise NotImplementedError(f'Unable to process item: {type(item)}')
         elif isinstance(item, ast.AnnAssign):
@@ -145,9 +184,10 @@ def process_class(ast_class: ast.ClassDef):
         class_fragment = add_heading(doc_str_frag=class_fragment,
                                      heading='Methods')
     for method in methods:
-        with class_fragment:
-            process_function(ast_function=method,
-                             class_name=ast_class.name)
+        func_fragment = process_function(ast_function=method,
+                                           class_name=ast_class.name)
+        if func_fragment is not None:
+            class_fragment += func_fragment
 
     return class_fragment
 
@@ -168,13 +208,13 @@ def process_signature(func_name: str,
             param += f'={param_default}'
         if idx < len(param_names) - 1:
             param += ', '
+        else:
+            param += ')'
         with sig_params_fragment:
             tags.div(param,
                      cls='yap func-sig-param')
     sig_fragment += sig_params_fragment
-    # close the signature
-    with sig_fragment:
-        tags.span(')')
+
     return sig_fragment
 
 
@@ -198,6 +238,9 @@ def add_param_set(doc_str_frag: tags.div,
         param_types_str = 'None'
     else:
         param_types_str = ' | '.join(param_type)
+    elem_desc_frag = tags.div(cls='yap doc-str-elem-desc')
+    elem_desc_frag = addMarkdown(fragment=elem_desc_frag,
+                                 text=param_description)
     with doc_str_frag:
         tags.div(
             tags.div(
@@ -207,10 +250,7 @@ def add_param_set(doc_str_frag: tags.div,
                          cls='yap doc-str-elem-type'),
                 cls='yap doc-str-elem-def'
             ),
-            tags.div(
-                addMarkdown(param_description),
-                cls='yap doc-str-elem-desc'
-            ),
+            elem_desc_frag,
             cls='yap doc-str-elem-container')
     return doc_str_frag
 
@@ -227,7 +267,8 @@ def process_docstring(doc_str: str | None,
             desc = parsed_doc_str.short_description
             if parsed_doc_str.long_description is not None:
                 desc += parsed_doc_str.long_description
-            doc_str_frag += addMarkdown(desc)
+            doc_str_frag = addMarkdown(fragment=doc_str_frag,
+                                       text=desc)
         if (len(param_names) and parsed_doc_str.params is None) or (len(param_names) != len(parsed_doc_str.params)):
             raise ValueError(f'''
             Number of docstring params does not match number of signature params:
@@ -303,7 +344,8 @@ def process_docstring(doc_str: str | None,
             metas_frag = add_heading(doc_str_frag=metas_frag,
                                      heading='Notes')
             for meta in metas:
-                metas_frag += addMarkdown(meta.description)
+                metas_frag = addMarkdown(fragment=metas_frag,
+                                         text=meta.description)
             doc_str_frag += metas_frag
 
     return doc_str_frag
@@ -400,9 +442,8 @@ def parse(module_name: str,
     # module docstring
     module_docstring = ast.get_docstring(ast_module)
     if module_docstring is not None:
-        with dom_fragment:
-            tags.div(module_docstring.replace('\n', ' ').strip(),
-                     cls='yap doc-str-content')
+        dom_fragment = addMarkdown(fragment=dom_fragment,
+                                   text=module_docstring.replace('\n', ' ').strip())
     # iterate the module's members
     for item in ast_module.body:
         # process functions

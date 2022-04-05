@@ -13,4 +13,4 @@ outro_template: "\n
 module_map:
   test.mock_file:
     py: ./tests/mock_file.py
-    astro: ./tests/mock_custom_file.astro
+    astro: ./tests/mock_custom.astro

@@ -6,7 +6,6 @@ import pytest
 import yaml
 
 from yapper import handler, runner
-from tests import expected
 
 yap_clean_config = copy.deepcopy(handler.yap_template_config)
 
@@ -145,7 +144,8 @@ def test_parse():
     astro = handler.parser.parse(module_name='tests.mock_file',
                                 ast_module=ast_module,
                                 yap_config=yap_clean_config)
-    assert astro.strip() == expected.lines_default.strip()
+    with open('./tests/expected_default.html') as expected_html:
+        assert astro.strip() == expected_html.read().strip()
     # using the custom config
     args = runner.arg_parser.parse_args(['--config', './tests/.yap_config_custom.yaml'])
     yap_config = handler.load_config(args)
@@ -153,7 +153,8 @@ def test_parse():
     astro = handler.parser.parse(module_name='tests.mock_file',
                                 ast_module=ast_module,
                                 yap_config=merged_config)
-    assert astro.strip() == expected.lines_custom.strip()
+    with open('./tests/expected_custom.html') as expected_html:
+        assert astro.strip() == expected_html.read().strip()
 
 
 def test_main():
@@ -163,12 +164,14 @@ def test_main():
     merged_config = handler.process_config(yap_config)
     handler.main(merged_config)
     # verify the output file
-    with open('./tests/mock_basic_file.astro') as astro_file:
-        assert astro_file.read().strip() == expected.astro_file_default.strip()
+    with open('./tests/mock_default.astro') as astro_file:
+        with open('./tests/expected_default.astro') as expected_astro_file:
+            assert astro_file.read().strip() == expected_astro_file.read().strip()
     # using the custom yap_config
     args = runner.arg_parser.parse_args(['--config', './tests/.yap_config_custom.yaml'])
     yap_config = handler.load_config(args)
     merged_config = handler.process_config(yap_config)
     handler.main(merged_config)
-    with open('./tests/mock_custom_file.astro') as astro_file:
-        assert astro_file.read().strip() == expected.astro_file_custom.strip()
+    with open('./tests/mock_custom.astro') as astro_file:
+        with open('./tests/expected_custom.astro') as expected_astro_file:
+            assert astro_file.read().strip() == expected_astro_file.read().strip()
