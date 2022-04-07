@@ -64,10 +64,11 @@ def weld_candidate(text_a: str, text_b: str) -> bool:
         return False
     if text_b is None or text_b == '':
         return False
-    for c in ['|', ':']:
-        if text_a.endswith(c):
+    for c in ['|', '>']:
+        if text_a.strip().endswith(c):
             return False
-        if text_b.startswith(c):
+    for c in ['|', '!', '<', '-', '*']:
+        if text_b.strip().startswith(c):
             return False
     return True
 
@@ -77,31 +78,50 @@ def addMarkdown(fragment: tags.dom_tag,
     """ """
     content_str = ''
     if text is not None:
-        content_str = text.strip().strip('\n')
+        content_str = text.strip()
     splits = content_str.split('\n')
-    is_pre = False
+    code_block = False
+    code_padding = None
+    admonition = False
     text = ''
     for idx in range(len(splits)):
-        next_line = splits[idx].strip()
+        next_line = splits[idx]
+        # code blocks
         if '```' in next_line:
-            if not is_pre:
-                is_pre = True
+            if code_block is False:
+                code_block = True
+                code_padding = next_line.index('```')
+                text += f'\n{next_line[code_padding:]}'
             else:
-                is_pre = False
-            text += f'\n{next_line}'
-        elif is_pre:
-            text += f'\n{next_line}'
+                text += f'\n{next_line[code_padding:]}\n'
+                code_block = False
+                code_padding = None
+        elif code_block:
+            text += f'\n{next_line[code_padding:]}'
+        # double breaks
+        elif next_line == '':
+            text += '\n\n'
+        # admonitions
+        elif ':::' in next_line:
+            admonition = True
+            text += f'\n{next_line.strip()}'
+        elif admonition is True:
+            admonition = False
+            text += f'\n{next_line.strip()}'
+        # tables
+        elif next_line.strip().startswith('|') and next_line.strip().endswith('|'):
+            text += f'\n{next_line.strip()}'
+        # otherwise weld if possible
         elif weld_candidate(text, next_line):
-            text += f' {next_line}'
+            text += f' {next_line.strip()}'
         else:
-            text += f'\n{next_line}'
-    if is_pre:
-        raise ValueError(f'Unclosed code block encountered for content: \n{text}')
+            text += f'\n{next_line.strip()}'
+    if code_block:
+        raise ValueError(f'Unclosed code block or admonition encountered for content: \n{text}')
     text += '\n'
-    md = Markdown(text,
-                  cls='doc-str-content')
+    md = Markdown(text)
     # add is:raw directive
-    fragment += util.raw(md.render().replace('">', '" is:raw>'))
+    fragment += util.raw(md.render().replace('<Markdown>', '<Markdown is:raw>'))
     return fragment
 
 
@@ -117,11 +137,10 @@ def process_class(ast_class: ast.ClassDef):
     # base classes
     for base in ast_class.bases:
         with class_fragment:
-            base_item = tags.p(cls='doc-str-content')
+            base_item = tags.p(cls='yap class-base')
             with base_item:
                 util.text('Inherits from')
                 tags.a(base.id,
-                       cls='yap class-base',
                        href=f'#{slugify(base.id)}')
                 util.text('.')
     # when the class is passed-in directly its name is captured in the member_name
@@ -130,7 +149,7 @@ def process_class(ast_class: ast.ClassDef):
     for item in ast_class.body:
         if isinstance(item, ast.Expr):
             if isinstance(item.value, ast.Constant):
-                desc = item.value.value.strip().lstrip('\n').rstrip('\n')
+                desc = item.value.value.strip()
                 class_fragment = addMarkdown(fragment=class_fragment,
                                              text=desc)
             else:
@@ -223,7 +242,7 @@ def add_heading(doc_str_frag: tags.dom_tag,
     """ """
     with doc_str_frag:
         tags.h3(heading,
-                cls='yap doc-str-heading')
+                cls='yap')
     return doc_str_frag
 
 
@@ -260,13 +279,13 @@ def process_docstring(doc_str: str | None,
                       param_types: list[list[str]],
                       return_types: list[str]):
     """ """
-    doc_str_frag = tags.div(cls='yap doc-str-content')
+    doc_str_frag = tags.div(cls='yap')
     if doc_str is not None:
         parsed_doc_str = docstring_parser.parse(doc_str)
         if parsed_doc_str.short_description is not None:
             desc = parsed_doc_str.short_description
             if parsed_doc_str.long_description is not None:
-                desc += parsed_doc_str.long_description
+                desc += f'\n{parsed_doc_str.long_description}'
             doc_str_frag = addMarkdown(fragment=doc_str_frag,
                                        text=desc)
         if (len(param_names) and parsed_doc_str.params is None) or (len(param_names) != len(parsed_doc_str.params)):
@@ -274,6 +293,7 @@ def process_docstring(doc_str: str | None,
             Number of docstring params does not match number of signature params:
             signature paramters: {param_names}
             parsed doc-str params: {parsed_doc_str.params}
+            doc string: {doc_str}
             ''')
         if parsed_doc_str.params is not None and len(parsed_doc_str.params):
             doc_str_frag = add_heading(doc_str_frag=doc_str_frag,
@@ -378,7 +398,7 @@ def process_function(ast_function: ast.FunctionDef,
         return
     func_fragment = tags.section(cls='yap func')
     if class_name and ast_function.name == '__init__':
-        func_name = f'{class_name}'
+        func_name = f'{class_name}.__init__'
     elif class_name:
         func_name = f'{class_name}.{ast_function.name}'
     else:
@@ -402,8 +422,10 @@ def process_function(ast_function: ast.FunctionDef,
         param_types.append(types)
         if idx < pad:
             param_defaults.append(None)
-        else:
+        elif hasattr(ast_function.args.defaults[idx - pad], 'value'):
             param_defaults.append(getattr(ast_function.args.defaults[idx - pad], 'value'))
+        else:
+            param_defaults.append('(*)')
     if hasattr(ast_function.args, 'kwarg') and ast_function.args.kwarg is not None:
         param_names.append('**kwargs')
         param_types.append([])

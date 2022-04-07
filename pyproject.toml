@@ -1,6 +1,6 @@
 [project]
 name = "yapper"
-version = "0.2.0b14"
+version = "0.2.0b18"
 description = "Parser for converting python docstrings to .astro files for the Astro static site generator."
 readme = 'README.md'
 requires-python = ">=3.9,<4.0"
@@ -43,4 +43,4 @@ yapper = "yapper.runner:cli"
 
 [tool.pdm.scripts]
 tests = 'pytest ./tests'
-publish = 'pdm publish -u shongololo -v'
+publish = { shell= 'pdm run tests && pdm publish -u shongololo -v' }
