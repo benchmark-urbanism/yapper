@@ -8,4 +8,4 @@ outro_template: ""
 module_map:
   test.mock_file:
     py: ./tests/mock_file.py
-    astro: ./tests/mock.astro
+    astro: ./tests/mock_default.astro

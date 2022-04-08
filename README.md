@@ -1,60 +1,118 @@
 # Yapper
 
-Yapper converts Python docstrings to `markdown` for use by static site generators. It uses the [`docspec`](https://github.com/NiklasRosenstein/docspec) package to read python files.
-- It is based on a simple-as-possible configuration file. These configuration parameters can be set to control selected styling and component templates for subsequent interpretation by downstream static site-generators.
-- Linting and any other markdown processing is left to downstream workflows; for example, most IDEs have built-in linting and, if using the `markdown` for a static site generator, then any linting, linking, footnoting, emoticons, etc. can be handled by the respective `markdown` ecosystem. e.g. `remark` [plugins](https://github.com/remarkjs/remark/blob/main/doc/plugins.md) or similar.
+Yapper converts Python docstrings to `astro` files for use by the [Astro](https://astro.build/) static site generator.
 
-> If you need to generate `MkDocs` or `Hugo` documentation then you may want to use the [`pydoc-markdown`](https://github.com/NiklasRosenstein/pydoc-markdown) package instead.
+It uses the `ast` module to parse class and function signatures and uses [`docstring_parser`](https://github.com/rr-/docstring_parser) to parse docstrings, which is compatible with several common docstring styles, e.g. `google` and `numpy`. 
 
-## Docstrings
+Types will be inferred from signature typehints. If types are specified in docstrings and if these don't match the signature types, this will raise an error.
 
-`yapper` supports a simplified version of `numpy` docstring syntax:
-- It recognises `Parameter`, `Returns`, `Yields`, and `Raises` headings;
-- Types will be inferred automatically from signature typehints. Explicitly documented types within docstrings are (intentionally) *not* supported.
-- Docstrings should otherwise use conventional `markdown` formatting, e.g. for tables or emphasis, and these will be passed-through into the generated `markdown` file.
+Docstrings and parameter descriptions will be passed through as a raw markdown wrapped in the Astro `<Markdown is:raw></Markdown>` elements.
+
+Class and function elements are wrapped with `html` 
+
+> See the `cityseer.benchmarkurbanism.com` documentation site and associated [docs repo](https://github.com/benchmark-urbanism/cityseer-api/tree/master/docs) for a working example.
 
 For example:
 ```python
-def mock_function(param_a: str, param_b: int = 1) -> int:
+def mock_function(param_a: int) -> str:
     """
-    A mock function for testing purposes
+    A mock function returning a sum of param_a and param_b if positive numbers, else None
 
     Parameters
     ----------
-    param_a
+    param_a: int
         A *test* _param_.
-    param_b
-        Another *test* _param_.
 
-        | col A |: col B |
-        |=======|========|
-        | boo   | baa    |
+    Returns
+    -------
+    scare: str
+        Boo
+
+    Notes
+    -----
+    ```python
+    print(mock_function(1))
+    # returns "boo"
+    ```
     """
-    pass
+    return 'boo'
 ```
 
 Will be interpreted as:
-````markdown
-## mock\_function
+````html
+---
+import { Markdown } from 'astro/components';
+---
 
-```py
-mock_function(param_a,
-              param_b=1)
-              -> int
+<div class="yap module">
+  <h1 class="yap module-title" id="test-mock-file">
+    <a aria-hidden="true" href="#test-mock-file" tab_index="-1">
+      <svg ariaHidden="true" class="heading-icon" height="15px" viewbox="0 0 20 20" width="15px" xmlns="http://www.w3.org/2000/svg">
+        <path clip-rule="evenodd" d="
+M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z
+" fill-rule="evenodd"></path>
+      </svg>
+    </a>test.mock_file
+  </h1><Markdown is:raw>
+
+
+</Markdown>
+  <section class="yap func">
+    <h2 class="yap func-title" id="mock-function">
+      <a aria-hidden="true" href="#mock-function" tab_index="-1">
+        <svg ariaHidden="true" class="heading-icon" height="15px" viewbox="0 0 20 20" width="15px" xmlns="http://www.w3.org/2000/svg">
+          <path clip-rule="evenodd" d="
+M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z
+" fill-rule="evenodd"></path>
+        </svg>
+      </a>mock_function
+    </h2>
+    <div class="yap func-sig-content">
+      <div class="yap func-sig">
+        <span>mock_function(</span>
+        <div class="yap func-sig-params">
+          <div class="yap func-sig-param">param_a)</div>
+        </div>
+      </div>
+    </div>
+    <div class="yap"><Markdown is:raw>
+A mock function returning a sum of param_a and param_b if positive numbers, else None
+</Markdown>
+      <h3 class="yap">Parameters</h3>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name">param_a</div>
+          <div class="yap doc-str-elem-type">int</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown is:raw>
+A *test* _param_.
+</Markdown></div>
+      </div>
+      <h3 class="yap">Returns</h3>
+      <div class="yap doc-str-elem-container">
+        <div class="yap doc-str-elem-def">
+          <div class="yap doc-str-elem-name">scare</div>
+          <div class="yap doc-str-elem-type">str</div>
+        </div>
+        <div class="yap doc-str-elem-desc"><Markdown is:raw>
+Boo
+</Markdown></div>
+      </div>
+      <div class="yap doc-str-meta">
+        <h3 class="yap">Notes</h3><Markdown is:raw>
+```python
+print(mock_function(1))
+# returns &quot;boo&quot;
 ```
 
-A mock function for testing purposes
-
-#### Parameters
-
-**param_a** _str_: A *test* _param_.
-
-**param_b** _int_: Another *test* _param_.
-
-| col A |: col B |
-|=======|========|
-| boo   | baa    |
+</Markdown>
+      </div>
+    </div>
+  </section>
+</div>
 ````
+
+Conversion of markdown formatting, code blocks, admonitions, etc., is all handled downstream by Astro. Styling is likewise handled downstream via `css` targeting the associated element classes.
 
 ## Configuration
 
@@ -66,108 +124,41 @@ yapper --config ./my_config.yaml
 
 Any parameter keys specified in the configuration file must match one of those available in the default configuration, which is as follows:
 
-```python
-yap_template_config = {
-    'package_root_relative_path': '.',
-    'frontmatter_template': None,
-    'module_name_template': '# {module_name}\n\n',
-    'toc_template': None,
-    'function_name_template': '\n\n## {function_name}\n\n',
-    'class_name_template': '\n\n## **class** {class_name}\n\n',
-    'class_property_template': '\n\n#### {prop_name}\n\n',
-    'signature_template': '\n\n```py\n{signature}\n```\n\n',
-    'heading_template': '\n\n#### {heading}\n\n',
-    'param_template': '\n\n**{name}** _{type}_: {description}\n\n',
-    'return_template': '\n\n**{name}**: {description}\n\n',
-    'module_map': None
-}
+```yaml
+package_root_relative_path: '.',
+intro_template: '''
+  ---\n
+  import { Markdown } from 'astro/components';\n
+  ---\n
+''',
+outro_template: None,
+module_map: None
 ```
 
-When overriding a default config parameter, use `\n` for newlines and retain the same argument names for string interoplation (i.e curly brackets). For example, changing the heading template from a fourth-level to third-level markdown heading would look like this:
+If you want to wrap the `.astro` output in a particular layout, then set the `intro_template` and `outro_template` accordingly, for example, the following will import the `PageLayout` layout and will wrap the generated content accordingly:
 
 ```yaml
-heading_template: "\n\n### {heading}\n\n"
+intro_template: "
+  ---\n
+  import { Markdown } from 'astro/components';\n
+  import PageLayout from '../layouts/PageLayout.astro'\n
+  ---\n
+  \n
+  <PageLayout>
+  "
+outro_template: "\n
+  </PageLayout>\n
+  "
 ```
 
-The configuration can be used to generate custom formatted markdown files that work for static site generators, and this is particularly useful when using custom `javascript` components from a static site generator such as `vuepress` / `vitepress` / `gridsome`, etc.
-
-The `module_map` key is mandatory and specifies the python modules which should be processed by `yapper` mapped to the relative output filepath to which the generated `markdown` file will saved.
-
-The following config:
+The `module_map` key is mandatory and specifies the names of the python modules to be processed, each of which must be accompanied by a `py` key mapping to the input file and an `astro` key mapping to the output file:
 
 ```yaml
-signature_template: "\n\n<FuncSignature>\n<pre>\n{signature}\n</pre>\n</FuncSignature>\n\n"
-heading_template: "\n\n<FuncHeading>{heading}</FuncHeading>\n\n"
-param_template: "\n\n<FuncElement name='{name}' type='{type}'>\n\n{description}\n\n</FuncElement>\n\n"
-return_template: "\n\n<FuncElement name='{name}'>\n\n{description}\n\n</FuncElement>\n\n"
 module_map:
-  tests.mock_file: mock_custom_file.md
-```
-
-Would generate a `./mock_custom_file.md` file with the following markdown (for the same `mock_function` example shown above):
-```markdown
-## mock\_function
-
-<FuncSignature>
-<pre>
-mock_function(param_a,
-              param_b=1)
-              -> int
-</pre>
-</FuncSignature>
-
-A mock function for testing purposes
-
-<FuncHeading>Parameters</FuncHeading>
-
-<FuncElement name='param_a' type='str'>
-
-A *test* _param_.
-
-</FuncElement>
-
-<FuncElement name='param_b' type='int'>
-
-Another *test* _param_.
-
-| col A |: col B |
-|=======|========|
-| boo   | baa    |
-
-</FuncElement>
-```
-
-## Use from javascript
-
-Many or most static site generators make use of javascript and the related ecosystem available from `npm` / `yarn` package managers.
-
-As such, you may want to invoke `yapper` from a `package.json` file when building your documentation for development. This can be done with the help of `python-shell`. For example:
-
-```js
-const path = require('path')
-const { PythonShell } = require('python-shell')
-
-const options = {
-  mode: 'text',
-  pythonOptions: ['-u'],
-  pythonPath: path.resolve(__dirname, '../venv/bin/python'),
-  scriptPath: path.resolve(__dirname, '../venv/lib/python3.9/site-packages/yapper'),
-  args: ['--config', '../.yap_config.yaml'],
-}
-
-PythonShell.run('__init__.py', options, function (err) {
-  if (err) throw err
-})
-
-```
-
-`yapper` can then be invoked from `node` or the `package.json` file's scripts parameter, and can be coupled to other steps such as linting or validation, e.g.
-```json
-{
-  "scripts": {
-    "generate": "node generateDocs.js",
-    "lint": "markdownlint 'content/**/*.md' --fix",
-    "validateLinks": "remark -u validate-links ."
-  }
-}
+  test.mock_file:
+    py: ./tests/mock_file.py
+    astro: ./tests/mock_default.astro
+  test.another_file:
+    py: ./another/path.py
+    astro: /another/path.astro
 ```

@@ -7,15 +7,18 @@ jobs:
   publish-package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v2
+      - uses: pdm-project/setup-pdm@main
+        name: Setup PDM
         with:
-          python-version: 3.x
-      - name: build and publish package
-        env:
-          TWINE_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
+          python-version: 3.9
+          prerelease: true
+          enable-pep582: true
+      - name: Install dependencies
         run: |
-          python -m pip install --upgrade build twine
-          python -m build
-          twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+          pdm install
+          pdm plugin add pdm-publish
+      - name: Publish
+        run: |
+          pdm run tests
+          pdm publish --password ${{secrets.PYPI_TOKEN}}
