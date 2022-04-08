@@ -21,4 +21,4 @@ jobs:
       - name: Publish
         run: |
           pdm run tests
-          pdm publish --password ${{ secrets.PYPI_TOKEN }}
+          pdm publish --password ${{secrets.PYPI_TOKEN}}
