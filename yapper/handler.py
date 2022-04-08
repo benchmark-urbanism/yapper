@@ -16,7 +16,11 @@ logger = logging.getLogger(__name__)
 # template configs
 yap_template_config = {
     'package_root_relative_path': '.',
-    'intro_template': None,
+    'intro_template': '''
+      ---\n
+      import { Markdown } from 'astro/components';\n
+      ---\n
+    ''',
     'outro_template': None,
     'module_map': None
 }

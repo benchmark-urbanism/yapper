@@ -308,7 +308,7 @@ def process_docstring(doc_str: str | None,
                 except ValueError:
                     raise ValueError(f'docstring param: {param_name} not found in function signature parameters.')
                 param_type = param_types[param_idx]
-                if param.type_name is not None and param.type_name != param_type:
+                if param.type_name is not None and param.type_name not in param_type:
                     raise ValueError(f'docstring param {param_name} type mismatch against function signature.')
                 doc_str_frag = add_param_set(doc_str_frag=doc_str_frag,
                                              param_name=param_name,
