@@ -15,6 +15,10 @@ jobs:
           prerelease: true
           enable-pep582: true
       - name: Install dependencies
-        run: pdm install
+        run: |
+          pdm install
+          pdm plugin add pdm-publish
       - name: Publish
-        run: pdm run publish
+        run: |
+          pdm run tests
+          pdm publish --password ${{ secrets.PYPI_TOKEN }}
