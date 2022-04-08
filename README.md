@@ -8,7 +8,7 @@ Types will be inferred from signature typehints. If types are specified in docst
 
 Docstrings and parameter descriptions will be passed through as a raw markdown wrapped in the Astro `<Markdown is:raw></Markdown>` elements.
 
-Class and function elements are wrapped with `html` 
+Class and function elements are wrapped with `html` with `css` classes that can be styled from Astro.
 
 > See the `cityseer.benchmarkurbanism.com` documentation site and associated [docs repo](https://github.com/benchmark-urbanism/cityseer-api/tree/master/docs) for a working example.
 
