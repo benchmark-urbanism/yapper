@@ -17,4 +17,4 @@ jobs:
       - name: Install dependencies
         run: pdm install
       - name: Publish
-        run: pdm publish
+        run: pdm run publish
