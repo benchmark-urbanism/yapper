@@ -6,11 +6,11 @@ It uses the `ast` module to parse class and function signatures and uses [`docst
 
 Types will be inferred from signature typehints. If types are specified in docstrings and if these don't match the signature types, this will raise an error.
 
-Docstrings and parameter descriptions will be passed through as a raw markdown wrapped in the Astro `<Markdown is:raw></Markdown>` elements.
+Docstrings and parameter descriptions will be passed through as a raw markdown wrapped in the Astro `<Markdown is:raw></Markdown>` element.
 
 Class and function elements are wrapped with `html` with `css` classes that can be styled from Astro.
 
-> See the `cityseer.benchmarkurbanism.com` documentation site and associated [docs repo](https://github.com/benchmark-urbanism/cityseer-api/tree/master/docs) for a working example.
+> See the [`cityseer`](cityseer.benchmarkurbanism.com) documentation site and associated [docs repo](https://github.com/benchmark-urbanism/cityseer-api/tree/master/docs) for a working example.
 
 For example:
 ```python
