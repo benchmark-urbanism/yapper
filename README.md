@@ -125,13 +125,13 @@ yapper --config ./my_config.yaml
 Any parameter keys specified in the configuration file must match one of those available in the default configuration, which is as follows:
 
 ```yaml
-package_root_relative_path: '.',
+package_root_relative_path: '.'
 intro_template: '''
   ---\n
   import { Markdown } from 'astro/components';\n
   ---\n
-''',
-outro_template: None,
+'''
+outro_template: None
 module_map: None
 ```
 
