@@ -126,11 +126,11 @@ Any parameter keys specified in the configuration file must match one of those a
 
 ```yaml
 package_root_relative_path: '.'
-intro_template: '''
+intro_template: "
   ---\n
   import { Markdown } from 'astro/components';\n
   ---\n
-'''
+  "
 outro_template: None
 module_map: None
 ```
