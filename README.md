@@ -10,7 +10,7 @@ Docstrings and parameter descriptions will be passed through as a raw markdown w
 
 Class and function elements are wrapped with `html` with `css` classes that can be styled from Astro.
 
-> See the [`cityseer`](cityseer.benchmarkurbanism.com) documentation site and associated [docs repo](https://github.com/benchmark-urbanism/cityseer-api/tree/master/docs) for a working example.
+> See the [`cityseer`](https://cityseer.benchmarkurbanism.com) documentation site and associated [docs repo](https://github.com/benchmark-urbanism/cityseer-api/tree/master/docs) for a working example.
 
 For example:
 ```python
