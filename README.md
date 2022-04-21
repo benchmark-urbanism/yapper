@@ -141,7 +141,7 @@ If you want to wrap the `.astro` output in a particular layout, then set the `in
 intro_template: "
   ---\n
   import { Markdown } from 'astro/components';\n
-  import PageLayout from '../layouts/PageLayout.astro'\n
+  import PageLayout from '@src/layouts/PageLayout.astro'\n
   ---\n
   \n
   <PageLayout>
