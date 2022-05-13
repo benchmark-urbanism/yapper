@@ -424,7 +424,7 @@ def process_function(ast_function: ast.FunctionDef, class_name: str = None):
     return func_fragment
 
 
-def parse(module_name: str, ast_module: ast.Module, yap_config: dict):
+def parse(module_name: str, ast_module: ast.Module, yapper_config: dict):
     """ """
     # start the DOM fragment
     dom_fragment = tags.div(cls="yap module")
@@ -444,13 +444,13 @@ def parse(module_name: str, ast_module: ast.Module, yap_config: dict):
         elif isinstance(item, ast.ClassDef):
             dom_fragment += process_class(item)
     astro = ""
-    if yap_config["intro_template"] is not None:
-        for line in yap_config["intro_template"].split("\n"):
+    if yapper_config["intro_template"] is not None:
+        for line in yapper_config["intro_template"].split("\n"):
             astro += f"{line.strip()}\n"
     astro += dom_fragment.render().strip()
-    if yap_config["outro_template"] is not None:
-        astro += '\n'
-        for line in yap_config["outro_template"].split("\n"):
+    if yapper_config["outro_template"] is not None:
+        astro += "\n"
+        for line in yapper_config["outro_template"].split("\n"):
             astro += f"{line.strip()}\n"
 
     return astro

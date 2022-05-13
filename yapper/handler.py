@@ -14,10 +14,10 @@ logger = logging.getLogger(__name__)
 
 # template configs
 yapper_template_config = {
-    'package_root_relative_path': './',
-    'intro_template': "---\n\nimport { Markdown } from 'astro/components';\n\n---\n\n",
-    'outro_template': '',
-    'module_map': []
+    "package_root_relative_path": "./",
+    "intro_template": "---\n\nimport { Markdown } from 'astro/components';\n\n---\n\n",
+    "outro_template": "",
+    "module_map": [],
 }
 
 
@@ -43,19 +43,19 @@ def load_config(args: argparse.Namespace) -> dict:
         raise ValueError(f"Config file path of {file_path} does not exist.")
     logger.info(f"Loading yapper config from {file_path}")
     py_config = toml.load(open(file_path))
-    yapper_config = py_config['tool']['yapper']
-    
+    yapper_config = py_config["tool"]["yapper"]
+
     return yapper_config
 
 
 def process_config(yapper_config: dict) -> dict:
-    err_msg = f'''
+    err_msg = f"""
     The "module_map" should consist of an array of inline tables. 
     Each inline table should contain: 
     - a "module" key with the module name; 
     - a "py" key with the filepath to the input Python file; 
     - an "astro" key with output filepath for the astro file.
-    '''
+    """
     if "module_map" not in yapper_config:
         raise KeyError('The configuration file requires a "module_map" key.')
     if not isinstance(yapper_config["module_map"], list) or not yapper_config["module_map"]:
@@ -86,31 +86,34 @@ def process_config(yapper_config: dict) -> dict:
             merged_config[def_key] = yapper_config[def_key]
         else:
             merged_config[def_key] = yapper_template_config[def_key]
-            
+
     return merged_config
 
 
-def main(yap_config: dict) -> None:
+def main(yapper_config: dict) -> None:
     """ """
-    yap_config = process_config(yap_config)
+    yapper_config = process_config(yapper_config)
     # check and add package root path if spec'd in config
     # this should only be necessary if the script is placed somewhere other than the package root
-    if "package_root_relative_path" in yap_config:
-        package_path = Path(Path.cwd() / yap_config["package_root_relative_path"])
+    if "package_root_relative_path" in yapper_config:
+        package_path = Path(Path.cwd() / yapper_config["package_root_relative_path"])
     else:
         package_path = Path.cwd()
     logger.info(f"Adding {package_path} to Python paths")
     sys.path.append(str(package_path))
     # parse the modules
-    for module_name, module_paths in yap_config["module_map"].items():
-        py_path = module_paths["py"]
-        astro_path = module_paths["astro"]
+    for module_info in yapper_config["module_map"]:
+        py_path = module_info["py"]
         in_path = Path(package_path / py_path)
+        astro_path = module_info["astro"]
         out_path = Path(package_path / astro_path)
         logger.info(f"Processing {in_path} to {out_path}")
         # process the module
         ast_module = ast.parse(open(in_path).read())
-        astro = parser.parse(module_name=module_name, ast_module=ast_module, yap_config=yap_config)
+        # get the module name
+        module_name = module_info["module"]
+        # parse
+        astro = parser.parse(module_name=module_name, ast_module=ast_module, yapper_config=yapper_config)
         # create the path and output directories as needed
         out_file = Path(out_path)
         out_file.parent.mkdir(parents=True, exist_ok=True)

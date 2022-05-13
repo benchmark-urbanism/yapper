@@ -17,8 +17,8 @@ def cli():
     """Command Line Interface to yapper."""
     args = arg_parser.parse_args()
     config_file = handler.load_config(args)
-    yap_config = handler.process_config(config_file)
-    handler.main(yap_config)
+    yapper_config = handler.process_config(config_file)
+    handler.main(yapper_config)
 
 
 if __name__ == "__main__":
