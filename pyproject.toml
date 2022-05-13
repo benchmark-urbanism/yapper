@@ -58,12 +58,19 @@ color = true
 
 [tool.pylint.master]
 ignore = ["_version.py"]
-disable = ["logging-fstring-interpolation"]
+disable = [
+    "too-many-branches",
+    "too-many-statements",
+    "too-many-locals",
+    "missing-module-docstring",
+    "logging-fstring-interpolation",
+    "unspecified-encoding",
+]
 jobs = 0
 output-format = "colorized"
 
 [tool.pylint.basic]
-good-names = ["i", "j"]
+good-names = ["a", "h", "i", "j", "s", "md"]
 
 [tool.pylint.design]
 max-args = 10
