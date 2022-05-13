@@ -5,42 +5,134 @@ description = "Parser for converting python docstrings to .astro files for the A
 readme = 'README.md'
 requires-python = ">=3.9,<4.0"
 license-expression = 'MIT'
-keywords = ['python', 'static-site-generator', 'astro', 'parser', 'documentation', 'docstrings']
-authors = [
-    {name = "Gareth Simons", email = "info@benchmarkurbanism.com"},
+keywords = [
+    'python',
+    'static-site-generator',
+    'astro',
+    'parser',
+    'documentation',
+    'docstrings',
 ]
-maintainers = [
-    {name = "Gareth Simons", email = "info@benchmarkurbanism.com"},
-]
-classifiers = [
-  "Programming Language :: Python"
-]
+authors = [{ name = "Gareth Simons", email = "info@benchmarkurbanism.com" }]
+maintainers = [{ name = "Gareth Simons", email = "info@benchmarkurbanism.com" }]
+classifiers = ["Programming Language :: Python"]
 dependencies = [
     "docstring-parser<1.0,>=0.13",
     "dominate<3.0.0,>=2.6.0",
     "python-slugify<7.0.0,>=6.1.1",
     "Markdown<4.0.0,>=3.3.6",
-    "pyyaml>=6.0",
+    "toml>=0.10.2",
 ]
-[tool.pdm]
+
 [project.optional-dependencies]
 [tool.pdm.dev-dependencies]
 dev = [
     "pytest>=7.1.1",
+    "setuptools-scm>=6.4.2",
+    "mypy>=0.950",
+    "pylint>=2.13.7",
+    "black>=22.3.0",
+    "isort>=5.10.1",
+    "pydocstyle>=6.1.1",
+    "coverage>=6.3.2",
 ]
 
 [project.urls]
-homepage =  "https://github.com/benchmark-urbanism/yapper"
-documentation =  "https://github.com/benchmark-urbanism/yapper"
+homepage = "https://github.com/benchmark-urbanism/yapper"
+documentation = "https://github.com/benchmark-urbanism/yapper"
 repository = "https://github.com/benchmark-urbanism/yapper"
 
 [build-system]
-requires = ["pdm-pep517>=0.12.0", "tomli>=1.1.0"]
-build-backend = "pdm.pep517.api"
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
 
-[project.scripts]
-yapper = "yapper.runner:cli"
+[tool.setuptools]
+packages = ["yapper"]
+
+[tool.setuptools_scm]
+write_to = "yapper/_version.py"
+
+[tool.black]
+line-length = 120
+color = true
+
+[tool.pylint.master]
+ignore = ["_version.py"]
+disable = ["logging-fstring-interpolation"]
+jobs = 0
+output-format = "colorized"
+
+[tool.pylint.basic]
+good-names = ["i", "j"]
+
+[tool.pylint.design]
+max-args = 10
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.logging]
+logging_format_style = "new"
+
+[tool.mypy]
+plugins = ["numpy.typing.mypy_plugin"]
+files = ["yapper", "tests"]
+exclude = ["__pypackages__", "build", "docs"]
+namespace_packages = true
+explicit_package_bases = true
+python_version = "3.9"
+strict_optional = false
+warn_redundant_casts = true
+warn_unused_ignores = false
+warn_no_return = true
+warn_return_any = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["pytest", "tomllib"]
+ignore_missing_imports = true
+
+[tool.pydocstyle]
+# http://www.pydocstyle.org/en/stable/error_codes.html
+ignore = [
+    "D200", # One-line docstring should fit on one line with quotes
+    "D203", # 1 blank line required before class docstring
+    "D212", # Multi-line docstring summary should start at the first line
+]
+match = "(?!test_).*\\.py"
+match_dir = "^(?!(__pypackages__|dist|tests)).*"
+
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+line_length = 120
+known_first_party = ["yapper"]
+atomic = true
+filter_files = true
+src_paths = ["yapper", "tests"]
+
+[tool.pytest.ini_options]
+console_output_style = "count"
+log_cli = true
+log_cli_level = "INFO"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["yapper"]
+branch = true
+omit = ["**/__init__.py"]
+
+[tool.coverage.report]
+include = ["yapper/**"]
+omit = ["**/__init__.py"]
 
 [tool.pdm.scripts]
-tests = 'pytest ./tests'
-publish = { shell= 'pdm run tests && pdm publish -u shongololo -v' }
+docstyle = "pydocstyle --config=pyproject.toml"
+formatting = { shell = "black --config=pyproject.toml ./ && isort --settings-file=pyproject.toml ./" }
+typechecks = "mypy --config-file=pyproject.toml"
+linting = "pylint --rcfile=pyproject.toml ./yapper"
+tests = "pytest ./tests"
+coverage_run = "coverage run -m pytest ./tests"
+coverage_report = { shell = "coverage report --show-missing --skip-empty && coverage lcov" }
+build = { shell = "pdm run formatting && pdm run typechecks && pdm run linting && pdm run tests && python -m build" }
+publish = { shell = 'pdm run tests && pdm publish -u shongololo -v' }

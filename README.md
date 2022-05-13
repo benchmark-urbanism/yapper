@@ -2,7 +2,7 @@
 
 Yapper converts Python docstrings to `astro` files for use by the [Astro](https://astro.build/) static site generator.
 
-It uses the `ast` module to parse class and function signatures and uses [`docstring_parser`](https://github.com/rr-/docstring_parser) to parse docstrings, which is compatible with several common docstring styles, e.g. `google` and `numpy`. 
+It uses the `ast` module to parse class and function signatures and uses [`docstring_parser`](https://github.com/rr-/docstring_parser) to parse docstrings, which is compatible with several common docstring styles, e.g. `google` and `numpy`.
 
 Types will be inferred from signature typehints. If types are specified in docstrings and if these don't match the signature types, this will raise an error.
 
@@ -13,6 +13,7 @@ Class and function elements are wrapped with `html` with `css` classes that can 
 > See the `cityseer.benchmarkurbanism.com` documentation site and associated [docs repo](https://github.com/benchmark-urbanism/cityseer-api/tree/master/docs) for a working example.
 
 For example:
+
 ```python
 def mock_function(param_a: int) -> str:
     """
@@ -39,6 +40,7 @@ def mock_function(param_a: int) -> str:
 ```
 
 Will be interpreted as:
+
 ````html
 ---
 import { Markdown } from 'astro/components';
@@ -116,49 +118,47 @@ Conversion of markdown formatting, code blocks, admonitions, etc., is all handle
 
 ## Configuration
 
-Configuration is provided in the form of a `.yap_config.yaml` file placed in the current directory, else a `--config` parameter can be provided with a relative or absolute filepath to the config file.
+Configuration is provided in `pyproject.toml` file placed in the current directory, else a `--config` parameter can be provided with a relative or absolute filepath to a `toml` config file.
 
 ```bash
-yapper --config ./my_config.yaml
+yapper --config ./custom_config.toml
 ```
 
-Any parameter keys specified in the configuration file must match one of those available in the default configuration, which is as follows:
+The `toml` file must include a `[tool.yapper]` section, with keys corresponding to the default configuration options:
 
-```yaml
-package_root_relative_path: '.',
-intro_template: '''
-  ---\n
-  import { Markdown } from 'astro/components';\n
-  ---\n
-''',
-outro_template: None,
-module_map: None
+```toml
+[tool.yapper]
+package_root_relative_path = './'
+intro_template = """
+---\n
+import { Markdown } from 'astro/components';\n
+---\n
+"""
+outro_template = ""
+module_map = [
+  { module = "test.mock_file", py = "./tests/mock_file.py", astro = "./tests/mock_default.astro" },
+]
 ```
 
 If you want to wrap the `.astro` output in a particular layout, then set the `intro_template` and `outro_template` accordingly, for example, the following will import the `PageLayout` layout and will wrap the generated content accordingly:
 
-```yaml
-intro_template: "
-  ---\n
-  import { Markdown } from 'astro/components';\n
-  import PageLayout from '../layouts/PageLayout.astro'\n
-  ---\n
-  \n
-  <PageLayout>
-  "
-outro_template: "\n
-  </PageLayout>\n
-  "
+```toml
+[tool.yapper]
+package_root_relative_path = './'
+intro_template = """
+---\n
+import { Markdown } from 'astro/components';\n
+import PageLayout from '../layouts/PageLayout.astro'\n
+---\n
+\n
+<PageLayout>
+"""
+outro_template = """
+</PageLayout>\n
+"""
+module_map = [
+  { module = "test.mock_file", py = "./tests/mock_file.py", astro = "./tests/mock_default.astro" },
+]
 ```
 
-The `module_map` key is mandatory and specifies the names of the python modules to be processed, each of which must be accompanied by a `py` key mapping to the input file and an `astro` key mapping to the output file:
-
-```yaml
-module_map:
-  test.mock_file:
-    py: ./tests/mock_file.py
-    astro: ./tests/mock_default.astro
-  test.another_file:
-    py: ./another/path.py
-    astro: /another/path.astro
-```
+The `module_map` is mandatory and specifies the names of the python modules to be processed via the `module` key, the `py` key mapping to the input file, and an `astro` key corresponding to the output file:
