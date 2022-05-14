@@ -1,6 +1,6 @@
 #!python
 """
-Yapper converts Python docstrings to `astro` files for use by the [Astro](https://astro.build/) static site generator.
+Yapper cli interface for invoking the methods in the handler module.
 """
 import argparse
 

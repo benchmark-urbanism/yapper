@@ -1,19 +1,26 @@
 #!python
+"""
+Yapper logic for loading and processing the config, and for using the config to parse docstrings to astro files.
+"""
+from __future__ import annotations
+
 import argparse
 import ast
+import copy
 import logging
 import sys
 from pathlib import Path
 
 import toml
 
-from yapper import parser
+from yapper import YapperConfig, parser
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 # template configs
-yapper_template_config = {
+yapper_template_config: YapperConfig = {
     "package_root_relative_path": "./",
     "intro_template": "---\n\nimport { Markdown } from 'astro/components';\n\n---\n\n",
     "outro_template": "",
@@ -21,7 +28,7 @@ yapper_template_config = {
 }
 
 
-def load_config(args: argparse.Namespace) -> dict:
+def load_config(args: argparse.Namespace) -> YapperConfig:
     """Load the yapper configuration from a .toml file."""
     logger.info("Parsing config.")
     file_name = None
@@ -50,7 +57,7 @@ def load_config(args: argparse.Namespace) -> dict:
     return yapper_config
 
 
-def process_config(yapper_config: dict) -> dict:
+def process_config(yapper_config: YapperConfig) -> YapperConfig:
     """Validate and prepares a yapper config for downstream use."""
     err_msg = """
     The "module_map" should consist of an array of inline tables. 
@@ -61,10 +68,10 @@ def process_config(yapper_config: dict) -> dict:
     """
     if "module_map" not in yapper_config:
         raise KeyError('The configuration file requires a "module_map" key.')
-    if not isinstance(yapper_config["module_map"], list) or not yapper_config["module_map"]:
+    if not isinstance(yapper_config["module_map"], list) or not yapper_config["module_map"]:  # type: ignore
         raise TypeError(err_msg)
     for module_info in yapper_config["module_map"]:
-        if not isinstance(module_info, dict):
+        if not isinstance(module_info, dict):  # type: ignore
             raise TypeError(err_msg)
         if "module" not in module_info.keys():
             raise KeyError(err_msg)
@@ -83,23 +90,22 @@ def process_config(yapper_config: dict) -> dict:
         if key not in yapper_template_config:
             raise KeyError(f"Config file key: {key} is not a valid configuration key.")
     # override defaults from config file
-    merged_config = {}
-    for config_key, default_val in yapper_template_config.items():
+    merged_config: YapperConfig = copy.deepcopy(yapper_template_config)
+    for config_key in merged_config.keys():
         if config_key in yapper_config:
             merged_config[config_key] = yapper_config[config_key]
-        else:
-            merged_config[config_key] = default_val
 
     return merged_config
 
 
-def main(yapper_config: dict) -> None:
-    """Uses a yapper config to parse docstrings from a pythong file to an astro output file."""
+def main(yapper_config: YapperConfig) -> None:
+    """Use a yapper config to parse docstrings from a python file to an astro output file."""
     yapper_config = process_config(yapper_config)
     # check and add package root path if spec'd in config
     # this should only be necessary if the script is placed somewhere other than the package root
     if "package_root_relative_path" in yapper_config:
-        package_path = Path(Path.cwd() / yapper_config["package_root_relative_path"])
+        config_path: str = yapper_config["package_root_relative_path"]
+        package_path = Path(Path.cwd() / config_path)
     else:
         package_path = Path.cwd()
     logger.info(f"Adding {package_path} to Python paths")
@@ -119,8 +125,8 @@ def main(yapper_config: dict) -> None:
         # parse
         astro = parser.parse(module_name=module_name, ast_module=ast_module, yapper_config=yapper_config)
         # create the path and output directories as needed
-        out_file = Path(out_path)
-        out_file.parent.mkdir(parents=True, exist_ok=True)
+        astro_path = Path(out_path)
+        astro_path.parent.mkdir(parents=True, exist_ok=True)
         # write!
-        with open(out_file, mode="w") as out_file:
+        with open(astro_path.absolute(), mode="w") as out_file:
             out_file.write(astro)

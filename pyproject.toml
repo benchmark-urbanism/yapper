@@ -29,12 +29,14 @@ dependencies = [
 dev = [
     "pytest>=7.1.1",
     "setuptools-scm>=6.4.2",
-    "mypy>=0.950",
     "pylint>=2.13.7",
     "black>=22.3.0",
     "isort>=5.10.1",
     "pydocstyle>=6.1.1",
     "coverage>=6.3.2",
+    "types-python-slugify>=5.0.4",
+    "types-toml>=0.10.7",
+    "pyright>=1.1.246",
 ]
 
 [project.urls]
@@ -81,23 +83,19 @@ max-line-length = 120
 [tool.pylint.logging]
 logging_format_style = "new"
 
-[tool.mypy]
-plugins = ["numpy.typing.mypy_plugin"]
-files = ["yapper", "tests"]
-exclude = ["__pypackages__", "build", "docs"]
-namespace_packages = true
-explicit_package_bases = true
-python_version = "3.9"
-strict_optional = false
-warn_redundant_casts = true
-warn_unused_ignores = false
-warn_no_return = true
-warn_return_any = true
-warn_unreachable = true
+# https://github.com/microsoft/pyright/blob/main/docs/configuration.md#sample-pyprojecttoml-file
+[tool.pyright]
+include = ["yapper"]
+exclude = [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/__pypackages__",
+    "yapper/typings",
+]
+typeCheckingMode = "strict"
+useLibraryCodeForTypes = true
+stubPath = "yapper/typings"
 
-[[tool.mypy.overrides]]
-module = ["pytest", "tomllib"]
-ignore_missing_imports = true
 
 [tool.pydocstyle]
 # http://www.pydocstyle.org/en/stable/error_codes.html
@@ -106,7 +104,7 @@ ignore = [
     "D203", # 1 blank line required before class docstring
     "D212", # Multi-line docstring summary should start at the first line
 ]
-match = "(?!test_).*\\.py"
+match = "(?!test_|__init__.py).*\\.py"
 match_dir = "^(?!(__pypackages__|dist|tests)).*"
 
 [tool.isort]
@@ -136,7 +134,7 @@ omit = ["**/__init__.py"]
 [tool.pdm.scripts]
 docstyle = "pydocstyle --config=pyproject.toml"
 formatting = { shell = "black --config=pyproject.toml ./ && isort --settings-file=pyproject.toml ./" }
-typechecks = "mypy --config-file=pyproject.toml"
+typechecks = "pyright"
 linting = "pylint --rcfile=pyproject.toml ./yapper"
 tests = "pytest ./tests"
 coverage_run = "coverage run -m pytest ./tests"

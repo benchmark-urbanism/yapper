@@ -1,5 +1,5 @@
 """
-Uses AST and docstring_parser to parse docstrings to .astro files.
+Uses AST and docstring_parser to parse docstrings to astro html.
 
 Intended for use with the Astro static site generator where further linting / linking / styling is done downstream.
 """
@@ -11,6 +11,8 @@ import logging
 import docstring_parser
 from dominate import dom_tag, svg, tags, util
 from slugify import slugify
+
+from yapper import YapperConfig
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -67,7 +69,7 @@ def weld_candidate(text_a: str, text_b: str) -> bool:
     return True
 
 
-def add_markdown(fragment: tags.dom_tag, text: str):
+def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section | tags.div:
     """Add a markdown text block."""
     content_str = ""
     if text is not None:
@@ -111,18 +113,18 @@ def add_markdown(fragment: tags.dom_tag, text: str):
     if code_block:
         raise ValueError(f"Unclosed code block or admonition encountered for content: \n{text}")
     text += "\n"
-    md = Markdown(text)
+    md: Markdown = Markdown(text)
     # add is:raw directive
-    fragment += util.raw(md.render().replace("<Markdown>", "<Markdown is:raw>"))
+    fragment += util.raw(md.render().replace("<Markdown>", "<Markdown is:raw>"))  # type: ignore
     return fragment
 
 
-def process_class(ast_class: ast.ClassDef):
+def process_class(ast_class: ast.ClassDef) -> tags.section | None:
     """Process a python class."""
     if ast_class is None:
         return None
     # build class fragment
-    class_fragment = tags.section(cls="yap class")
+    class_fragment: tags.section = tags.section(cls="yap class")
     class_fragment += heading_linker(heading_level="h2", heading_name=ast_class.name, heading_cls="yap class-title")
     # base classes
     for base in ast_class.bases:
@@ -130,16 +132,16 @@ def process_class(ast_class: ast.ClassDef):
             base_item = tags.p(cls="yap class-base")
             with base_item:
                 util.text("Inherits from")
-                tags.a(base.id, href=f"#{slugify(base.id)}")
+                tags.a(base.id, href=f"#{slugify(base.id)}")  # type: ignore
                 util.text(".")
     # when the class is passed-in directly its name is captured in the member_name
-    methods = []
-    props = []
+    methods: list[ast.FunctionDef] = []
+    props: list[ast.Expr | ast.AnnAssign | ast.FunctionDef] = []
     for item in ast_class.body:
         if isinstance(item, ast.Expr):
             if isinstance(item.value, ast.Constant):
                 desc = item.value.value.strip()
-                class_fragment = add_markdown(fragment=class_fragment, text=desc)
+                class_fragment = add_markdown(fragment=class_fragment, text=desc)  # type: ignore
             else:
                 raise NotImplementedError(f"Unable to process item: {type(item)}")
         elif isinstance(item, ast.AnnAssign):
@@ -162,17 +164,17 @@ def process_class(ast_class: ast.ClassDef):
                 methods.append(item)
     # process props
     if props:
-        class_fragment = add_heading(doc_str_frag=class_fragment, heading="Properties")
+        class_fragment = add_heading(doc_str_frag=class_fragment, heading="Properties")  # type: ignore
     for prop in props:
         if hasattr(prop, "name"):
-            prop_name = prop.name
-        elif hasattr(prop, "target") and hasattr(prop.target, "id"):
-            prop_name = prop.target.id
+            prop_name: str = prop.name  # type: ignore
+        elif isinstance(prop, ast.AnnAssign):
+            prop_name: str = prop.target.id  # type: ignore
         else:
-            NotImplementedError(f"Unable to extract property name from: {prop}")
+            raise NotImplementedError(f"Unable to extract property name from: {prop}")
         prop_type = ""
         if hasattr(prop, "annotation"):
-            prop_type = prop.annotation.id
+            prop_type: str = prop.annotation.id  # type: ignore
         prop_desc = ""
         with class_fragment:
             tags.div(
@@ -186,7 +188,7 @@ def process_class(ast_class: ast.ClassDef):
             )
     # process methods
     if methods:
-        class_fragment = add_heading(doc_str_frag=class_fragment, heading="Methods")
+        class_fragment = add_heading(doc_str_frag=class_fragment, heading="Methods")  # type: ignore
     for method in methods:
         func_fragment = process_function(ast_function=method, class_name=ast_class.name)
         if func_fragment is not None:
@@ -195,10 +197,10 @@ def process_class(ast_class: ast.ClassDef):
     return class_fragment
 
 
-def process_signature(func_name: str, param_names: list[str], param_defaults: list[str]):
+def process_signature(func_name: str, param_names: list[str], param_defaults: list[str | None]) -> tags.div:
     """Process function signature."""
     # process signature
-    sig_fragment = tags.div(cls="yap func-sig")
+    sig_fragment: tags.div = tags.div(cls="yap func-sig")
     with sig_fragment:
         tags.span(f"{func_name}(")
     # nest sig params for CSS alignment
@@ -218,14 +220,14 @@ def process_signature(func_name: str, param_names: list[str], param_defaults: li
     return sig_fragment
 
 
-def add_heading(doc_str_frag: tags.dom_tag, heading: str):
+def add_heading(doc_str_frag: tags.div | tags.section, heading: str) -> tags.div | tags.section:
     """Add a heading."""
     with doc_str_frag:
         tags.h3(heading, cls="yap")
     return doc_str_frag
 
 
-def add_param_set(doc_str_frag: tags.div, param_name: str, param_type: list[str], param_description: str):
+def add_param_set(doc_str_frag: tags.div, param_name: str, param_type: list[str], param_description: str) -> tags.div:
     """Add a parameter set."""
     if param_name is None:
         param_name = ""
@@ -250,16 +252,16 @@ def add_param_set(doc_str_frag: tags.div, param_name: str, param_type: list[str]
 
 def process_docstring(
     doc_str: str | None, param_names: list[str], param_types: list[list[str]], return_types: list[str]
-):
+) -> tags.div:
     """Process a docstring."""
-    doc_str_frag = tags.div(cls="yap")
+    doc_str_frag: tags.div = tags.div(cls="yap")
     if doc_str is not None:
         parsed_doc_str = docstring_parser.parse(doc_str)
         if parsed_doc_str.short_description is not None:
             desc = parsed_doc_str.short_description
             if parsed_doc_str.long_description is not None:
                 desc += f"\n{parsed_doc_str.long_description}"
-            doc_str_frag = add_markdown(fragment=doc_str_frag, text=desc)
+            doc_str_frag = add_markdown(fragment=doc_str_frag, text=desc)  # type: ignore
         if (len(param_names) and parsed_doc_str.params is None) or (len(param_names) != len(parsed_doc_str.params)):
             raise ValueError(
                 f"""
@@ -270,7 +272,7 @@ def process_docstring(
             """
             )
         if parsed_doc_str.params is not None and len(parsed_doc_str.params):
-            doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Parameters")
+            doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Parameters")  # type: ignore
             for param in parsed_doc_str.params:
                 param_name = param.arg_name
                 if "kwargs" in param_name:
@@ -289,27 +291,27 @@ def process_docstring(
                     doc_str_frag=doc_str_frag,
                     param_name=param_name,
                     param_type=param_type,
-                    param_description=param.description,
+                    param_description=param.description,  # type: ignore
                 )
         doc_str_return_types = []
         if parsed_doc_str.many_returns is not None and len(parsed_doc_str.many_returns):
-            doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Returns")
+            doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Returns")  # type: ignore
             for doc_str_return in parsed_doc_str.many_returns:
                 if doc_str_return.type_name in [None, "None"]:
                     types = None
                 else:
-                    types = doc_str_return.type_name.split("|")
+                    types = doc_str_return.type_name.split("|")  # type: ignore
                     types = [rt.strip() for rt in types]
-                    doc_str_return_types += types
+                    doc_str_return_types += types  # type: ignore
                 # if there is a single return and if the return types are no specified,
                 # then infer return types from the signature if available
                 if len(parsed_doc_str.many_returns) == 1 and not doc_str_return_types:
                     types = return_types
                 doc_str_frag = add_param_set(
                     doc_str_frag=doc_str_frag,
-                    param_name=doc_str_return.return_name,
-                    param_type=types,
-                    param_description=doc_str_return.description,
+                    param_name=doc_str_return.return_name,  # type: ignore
+                    param_type=types,  # type: ignore
+                    param_description=doc_str_return.description,  # type: ignore
                 )
         # if types were provided in both the signature and the docstring, check that these match
         if doc_str_return_types and return_types and not len(doc_str_return_types) == len(return_types):
@@ -322,17 +324,17 @@ def process_docstring(
             """
             )
         if len(parsed_doc_str.raises):
-            doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Raises")
+            doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Raises")  # type: ignore
             for raises in parsed_doc_str.raises:
                 doc_str_frag = add_param_set(
                     doc_str_frag=doc_str_frag,
                     param_name="",
-                    param_type=[raises.type_name],
-                    param_description=raises.description,
+                    param_type=[raises.type_name],  # type: ignore
+                    param_description=raises.description,  # type: ignore
                 )
         if parsed_doc_str.deprecation is not None:
             raise NotImplementedError("Deprecation not implemented.")
-        metas = []
+        metas: list[docstring_parser.common.DocstringMeta] = []
         for met in parsed_doc_str.meta:
             if not isinstance(
                 met,
@@ -348,7 +350,7 @@ def process_docstring(
             metas_frag = tags.div(cls="yap doc-str-meta")
             metas_frag = add_heading(doc_str_frag=metas_frag, heading="Notes")
             for meta in metas:
-                metas_frag = add_markdown(fragment=metas_frag, text=meta.description)
+                metas_frag = add_markdown(fragment=metas_frag, text=meta.description)  # type: ignore
             doc_str_frag += metas_frag
 
     return doc_str_frag
@@ -359,23 +361,25 @@ def extract_types(ast_types: list[str], ast_return: ast.BinOp | ast.Name):
     if isinstance(ast_return, ast.Name):
         ast_types.append(ast_return.id)
     if hasattr(ast_return, "left"):
-        if isinstance(ast_return.left, ast.Name):
-            ast_types.append(ast_return.left.id)
-        elif isinstance(ast_return.left, ast.BinOp):
-            extract_types(ast_types=ast_types, ast_return=ast_return.left)
+        if isinstance(ast_return.left, ast.Name):  # type: ignore
+            ast_types.append(ast_return.left.id)  # type: ignore
+        elif isinstance(ast_return.left, ast.BinOp):  # type: ignore
+            extract_types(ast_types=ast_types, ast_return=ast_return.left)  # type: ignore
     if hasattr(ast_return, "right"):
-        if isinstance(ast_return.right, ast.Name):
-            ast_types.append(ast_return.right.id)
-        elif isinstance(ast_return.right, ast.BinOp):
-            extract_types(ast_types=ast_types, ast_return=ast_return.right)
+        if isinstance(ast_return.right, ast.Name):  # type: ignore
+            ast_types.append(ast_return.right.id)  # type: ignore
+        elif isinstance(ast_return.right, ast.BinOp):  # type: ignore
+            extract_types(ast_types=ast_types, ast_return=ast_return.right)  # type: ignore
 
 
-def process_function(ast_function: ast.FunctionDef, class_name: str = None):
+def process_function(
+    ast_function: ast.FunctionDef | ast.AsyncFunctionDef, class_name: str | None = None
+) -> tags.section | None:
     """Process a function."""
     # don't process private members
     if ast_function.name.startswith("_") and not ast_function.name == "__init__":
         return None
-    func_fragment = tags.section(cls="yap func")
+    func_fragment: tags.section = tags.section(cls="yap func")
     if class_name and ast_function.name == "__init__":
         func_name = f"{class_name}.__init__"
     elif class_name:
@@ -384,16 +388,16 @@ def process_function(ast_function: ast.FunctionDef, class_name: str = None):
         func_name = ast_function.name
     func_fragment += heading_linker(heading_level="h2", heading_name=func_name, heading_cls="yap func-title")
     # extract parameters, types, defaults
-    param_names = []
-    param_types = []
-    param_defaults = []
+    param_names: list[str] = []
+    param_types: list[list[str]] = []
+    param_defaults: list[str | None] = []
     # pad defaults to keep in sync
     pad = len(ast_function.args.args) - len(ast_function.args.defaults)
     for idx, arg in enumerate(ast_function.args.args):
         if arg.arg == "self":
             continue
         param_names.append(arg.arg)
-        types = []
+        types: list[str] = []
         if isinstance(arg.annotation, (ast.Name, ast.BinOp)):
             extract_types(types, arg.annotation)
         param_types.append(types)
@@ -408,32 +412,33 @@ def process_function(ast_function: ast.FunctionDef, class_name: str = None):
         param_types.append([])
         param_defaults.append(None)
     # extract return types
-    return_types = []
+    return_types: list[str] = []
     if isinstance(ast_function.returns, (ast.BinOp, ast.Name)):
         extract_types(ast_types=return_types, ast_return=ast_function.returns)
     # process signature
     with func_fragment:
-        tags.div(cls="yap func-sig-content").appendChild(
+        tags.div(cls="yap func-sig-content").appendChild(  # type: ignore
             process_signature(func_name=func_name, param_names=param_names, param_defaults=param_defaults)
         )
     # process docstring
     doc_str = ast.get_docstring(ast_function)
-    func_fragment.appendChild(
+    func_fragment.appendChild(  # type: ignore
         process_docstring(doc_str=doc_str, param_names=param_names, param_types=param_types, return_types=return_types)
     )
 
     return func_fragment
 
 
-def parse(module_name: str, ast_module: ast.Module, yapper_config: dict):
+def parse(module_name: str, ast_module: ast.Module, yapper_config: YapperConfig) -> str:
     """Parse a python module."""
     # start the DOM fragment
-    dom_fragment = tags.div(cls="yap module")
+    dom_fragment: tags.div = tags.div(cls="yap module")
     dom_fragment += heading_linker(heading_level="h1", heading_name=module_name, heading_cls="yap module-title")
     # module docstring
     module_docstring = ast.get_docstring(ast_module)
     if module_docstring is not None:
-        dom_fragment = add_markdown(fragment=dom_fragment, text=module_docstring.replace("\n", " ").strip())
+        frag_text = module_docstring.replace("\n", " ").strip()
+        dom_fragment = add_markdown(fragment=dom_fragment, text=frag_text)  # type: ignore
     # iterate the module's members
     for item in ast_module.body:
         # process functions
@@ -444,11 +449,11 @@ def parse(module_name: str, ast_module: ast.Module, yapper_config: dict):
         # process classes and nested methods
         elif isinstance(item, ast.ClassDef):
             dom_fragment += process_class(item)
-    astro = ""
+    astro: str = ""
     if yapper_config["intro_template"] is not None:
         for line in yapper_config["intro_template"].split("\n"):
             astro += f"{line.strip()}\n"
-    astro += dom_fragment.render().strip()
+    astro += dom_fragment.render().strip()  # type: ignore
     if yapper_config["outro_template"] is not None:
         astro += "\n"
         for line in yapper_config["outro_template"].split("\n"):
