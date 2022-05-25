@@ -14,13 +14,11 @@ jobs:
           python-version: 3.9
           prerelease: true
           enable-pep582: true
-      - name: Install dependencies
-        run: |
-          pdm install
-      - name: Publish
+      - name: publish-dev
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.YAPPER_PYPI_TEST }}
         run: |
+          pdm install
           pdm run build
           pdm run twine upload -r testpypi dist/*
