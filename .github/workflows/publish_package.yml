@@ -19,6 +19,9 @@ jobs:
           pdm install
           pdm plugin add pdm-publish
       - name: Publish
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.YAPPER_PYPI }}
         run: |
           pdm run build
-          pdm run twine upload dist/* -u ${{secrets.PYPI_USERNAME}} -p ${{secrets.YAPPER_PYPI}}
+          pdm run twine upload dist/*

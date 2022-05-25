@@ -18,6 +18,9 @@ jobs:
         run: |
           pdm install
       - name: Publish
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.YAPPER_PYPI_TEST }}
         run: |
           pdm run build
-          pdm run twine upload -r testpypi dist/* -u ${{secrets.PYPI_USERNAME}} -p ${{secrets.YAPPER_PYPI_TEST}}
+          pdm run twine upload -r testpypi dist/*
