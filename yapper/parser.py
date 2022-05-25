@@ -18,7 +18,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# custom class for markdown
 class Markdown(dom_tag.dom_tag):
     """Custom dom tag for markdown."""
 
