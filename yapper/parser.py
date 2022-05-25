@@ -9,7 +9,7 @@ import ast
 import logging
 
 import docstring_parser
-from dominate import dom_tag, svg, tags, util
+from dominate import dom_tag, svg, tags, util  # type: ignore
 from slugify import slugify
 
 from yapper import YapperConfig

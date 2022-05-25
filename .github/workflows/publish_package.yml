@@ -2,7 +2,7 @@ name: publish package
 on:
   push:
     tags-ignore:
-      - '*.*.*[ab]*'
+      - "*.*.*[ab]*"
 jobs:
   publish-package:
     runs-on: ubuntu-latest
@@ -20,5 +20,5 @@ jobs:
           pdm plugin add pdm-publish
       - name: Publish
         run: |
-          pdm run tests
-          pdm publish --password ${{secrets.PYPI_TOKEN}}
+          pdm run build
+          pdm run twine upload dist/* -u ${{secrets.PYPI_USERNAME}} -p ${{secrets.YAPPER_PYPI}}

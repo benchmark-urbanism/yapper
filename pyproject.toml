@@ -1,10 +1,10 @@
 [project]
 name = "yapper"
-version = "0.2.1"
+version = "0.3.0a2"
 description = "Parser for converting python docstrings to .astro files for the Astro static site generator."
 readme = 'README.md'
 requires-python = ">=3.9,<4.0"
-license-expression = 'MIT'
+license = { text = "MIT" }
 keywords = [
     'python',
     'static-site-generator',
@@ -37,6 +37,8 @@ dev = [
     "types-python-slugify>=5.0.4",
     "types-toml>=0.10.7",
     "pyright>=1.1.246",
+    "setuptools>=62.3.2",
+    "twine>=4.0.0",
 ]
 
 [project.urls]
@@ -45,21 +47,17 @@ documentation = "https://github.com/benchmark-urbanism/yapper"
 repository = "https://github.com/benchmark-urbanism/yapper"
 
 [build-system]
-requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=45"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["yapper"]
-
-[tool.setuptools_scm]
-write_to = "yapper/_version.py"
 
 [tool.black]
 line-length = 120
 color = true
 
 [tool.pylint.master]
-ignore = ["_version.py"]
 disable = [
     "too-many-branches",
     "too-many-statements",
@@ -119,11 +117,7 @@ omit = ["**/__init__.py"]
 
 [tool.coverage.report]
 include = ["yapper/**"]
-omit = ["**/__init__.py", "**/_version.py"]
-
-[tool.black]
-line-length = 120
-color = true
+omit = ["**/__init__.py"]
 
 [tool.pydocstyle]
 # http://www.pydocstyle.org/en/stable/error_codes.html
@@ -144,5 +138,4 @@ docstyle = "pydocstyle --config=pyproject.toml"
 tests = "pytest ./tests"
 coverage_run = "coverage run -m pytest ./tests"
 coverage_report = { shell = "coverage report --show-missing --skip-empty && coverage lcov" }
-build = { shell = "pdm run formatting && pdm run linting && pdm run typechecks && pdm run docstyle && pdm run tests && python3 -m build" }
-publish = { shell = 'pdm run tests && pdm publish -u shongololo -v' }
+build = { shell = "pdm run formatting && pdm run linting && pdm run typechecks && pdm run docstyle && pdm run tests && pdm build" }
