@@ -14,11 +14,12 @@ jobs:
           python-version: 3.9
           prerelease: true
           enable-pep582: true
-      - name: publish-dev
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.YAPPER_PYPI }}
+      - name: Install and build
         run: |
           pdm install
           pdm run build
-          pdm run twine upload -r testpypi dist/*
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: ${{ secrets.PYPI_USERNAME }}
+          password: ${{ secrets.YAPPER_PYPI }}
