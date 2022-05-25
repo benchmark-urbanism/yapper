@@ -1,0 +1,49 @@
+{
+  "files.watcherExclude": {
+    "**/__pypackages__/**": true,
+    "**/*.egg-info": true,
+    "**/build/**": true,
+    "**/*temp*/**": true,
+    "**/dist/**": true,
+    "**/node_modules/**": true
+  },
+  "files.exclude": {
+    "**/*cache*/**": true,
+    "**/.firebase/**": true,
+    "**/.idea/**": true
+  },
+  "search.searchEditor.reusePriorSearchConfiguration": true,
+  "search.exclude": {
+    "**/*.code-search": false,
+    "**/__pypackages__/**": true,
+    "**/*.egg-info": true,
+    "**/build/**": true,
+    "**/*temp*/**": true,
+    "**/dist/**": true,
+    "**/node_modules/**": true
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "notebook.lineNumbers": "on",
+  "python.formatting.provider": "black",
+  "python.formatting.blackArgs": ["--config=pyproject.toml"],
+  "python.testing.pytestEnabled": true,
+  "python.analysis.completeFunctionParens": true,
+  "python.analysis.indexing": true,
+  "python.analysis.autoImportCompletions": true,
+  "python.linting.pydocstyleEnabled": true,
+  "python.linting.pylintEnabled": true,
+  "python.linting.ignorePatterns": [
+    "**/site-packages/**/*.py",
+    ".vscode/*.py",
+    "**/__pypackages__/**/*.py",
+    "**/build/**/*.py",
+    "**/*temp*/**/*.py",
+    "**/*test*/**/*.py"
+  ],
+  "python.languageServer": "Pylance"
+}
