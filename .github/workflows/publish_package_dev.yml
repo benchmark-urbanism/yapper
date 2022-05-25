@@ -19,6 +19,8 @@ jobs:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.YAPPER_PYPI_TEST }}
         run: |
+          echo $TWINE_USERNAME
+          echo ${{ secrets.PYPI_USERNAME }}
           pdm install
           pdm run build
           pdm run twine upload -r testpypi dist/*
