@@ -23,6 +23,7 @@ dependencies = [
     "Markdown<4.0.0,>=3.3.6",
     "toml>=0.10.2",
 ]
+dynamic = ["entry-points"]
 
 [project.optional-dependencies]
 [tool.pdm.dev-dependencies]
@@ -52,6 +53,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["yapper"]
+
+[tool.setuptools.dynamic]
+'entry-points' = 'runner.py'
 
 [tool.black]
 line-length = 120
@@ -87,7 +91,7 @@ include = ["yapper"]
 exclude = [
     "**/node_modules",
     "**/__pycache__",
-    "**/__pypackages__",
+    "__pypackages__",
     "yapper/stubs",
 ]
 typeCheckingMode = "strict"
