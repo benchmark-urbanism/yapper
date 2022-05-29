@@ -52,6 +52,11 @@ def load_config(args: argparse.Namespace) -> YapperConfig:
     logger.info(f"Loading yapper config from {file_path}")
     with open(file_path) as config:
         py_config = toml.load(config)
+    if "tool" not in py_config or "yapper" not in py_config["tool"]:
+        logger.info(
+            "Yapper requires a [tool.yapper] section in pyproject.toml. "
+            "Please refer to the yapper documentation for more information."
+        )
     yapper_config = py_config["tool"]["yapper"]
 
     return yapper_config

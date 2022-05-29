@@ -1,7 +1,7 @@
 exclude .*
 exclude build
-include tests
-include yapper
+include tests/**
+include yapper/**
 exclude *.egg-info
 exclude coverage.lcov
 include LICENSE.txt

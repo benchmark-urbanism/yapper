@@ -13,7 +13,7 @@ arg_parser.add_argument(
 )
 
 
-def cli():
+def parse_cli():
     """Command Line Interface to yapper."""
     args = arg_parser.parse_args()
     config_file = handler.load_config(args)
@@ -22,4 +22,4 @@ def cli():
 
 
 if __name__ == "__main__":
-    cli()
+    parse_cli()

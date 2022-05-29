@@ -17,7 +17,7 @@ jobs:
       - name: Install and build
         run: |
           pdm install
-          pdm run build
+          pdm run build_project
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:

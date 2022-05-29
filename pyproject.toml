@@ -1,6 +1,6 @@
 [project]
 name = "yapper"
-version = "0.3.0a10"
+version = "0.3.0a11"
 description = "Parser for converting python docstrings to .astro files for the Astro static site generator."
 readme = 'README.md'
 requires-python = ">=3.9,<4.0"
@@ -24,6 +24,9 @@ dependencies = [
     "toml>=0.10.2",
 ]
 dynamic = ["entry-points"]
+
+[project.scripts]
+yapper = "yapper.cli"
 
 [project.optional-dependencies]
 [tool.pdm.dev-dependencies]
@@ -53,9 +56,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["yapper"]
-
-[tool.setuptools.dynamic]
-'entry-points' = 'runner.py'
 
 [tool.black]
 line-length = 120
@@ -142,4 +142,4 @@ docstyle = "pydocstyle --config=pyproject.toml"
 tests = "pytest ./tests"
 coverage_run = "coverage run -m pytest ./tests"
 coverage_report = { shell = "coverage report --show-missing --skip-empty && coverage lcov" }
-build = { shell = "pdm run formatting && pdm run linting && pdm run typechecks && pdm run docstyle && pdm run tests && pdm build" }
+build_project = { shell = "pdm run formatting && pdm run linting && pdm run typechecks && pdm run docstyle && pdm run tests && pdm build" }
