@@ -7,11 +7,14 @@ jobs:
   publish-package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
       - uses: pdm-project/setup-pdm@main
         name: Setup PDM
         with:
-          python-version: 3.10
+          python-version: "3.10"
           prerelease: true
           enable-pep582: true
       - name: Install and build
