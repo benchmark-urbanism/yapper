@@ -3,7 +3,7 @@ name = "yapper"
 version = "0.3.0a13"
 description = "Parser for converting python docstrings to .astro files for the Astro static site generator."
 readme = 'README.md'
-requires-python = ">=3.9,<4.0"
+requires-python = ">=3.10,<4.0"
 license = { text = "MIT" }
 keywords = [
     'python',
@@ -87,6 +87,7 @@ logging_format_style = "new"
 
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md#sample-pyprojecttoml-file
 [tool.pyright]
+pythonVersion = '3.10'
 include = ["yapper"]
 exclude = [
     "**/node_modules",
@@ -132,7 +133,7 @@ ignore = [
     "D212", # Multi-line docstring summary should start at the first line
 ]
 match = "(?!test_).*\\.py"
-match_dir = "^(?!(__pypackages__|build|demos|docs|tests)).*"
+match_dir = "^(?!(__pypackages__|build|tests)).*"
 
 [tool.pdm.scripts]
 formatting = { shell = "black --config=pyproject.toml ./ && isort --settings-file=pyproject.toml ./" }
