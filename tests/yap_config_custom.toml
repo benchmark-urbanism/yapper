@@ -12,5 +12,5 @@ outro_template = """
 </PageLayout>
 """
 module_map = [
-  { module = "test.mock_file", py = "./tests/comparisons/mock_file.py", astro = "./tests/comparisons/mock_custom.astro" },
+  { module = "tests.comparisons.mock_file", py = "./tests/comparisons/mock_file.py", astro = "./tests/comparisons/mock_custom.astro" },
 ]

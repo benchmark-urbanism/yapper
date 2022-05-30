@@ -2,11 +2,11 @@
 """
 Yapper logic for loading and processing the config, and for using the config to parse docstrings to astro files.
 """
-from __future__ import annotations
 
 import argparse
 import ast
 import copy
+import importlib
 import logging
 import sys
 from pathlib import Path
@@ -122,13 +122,16 @@ def main(yapper_config: YapperConfig) -> None:
         astro_path = module_info["astro"]
         out_path = Path(package_path / astro_path)
         logger.info(f"Processing {in_path} to {out_path}")
-        # process the module
-        with open(in_path) as py_file:
-            ast_module = ast.parse(py_file.read())
         # get the module name
         module_name = module_info["module"]
+        module_content = importlib.import_module(module_name)
+        # process the module to AST
+        with open(in_path) as py_file:
+            ast_module = ast.parse(py_file.read())
         # parse
-        astro = parser.parse(module_name=module_name, ast_module=ast_module, yapper_config=yapper_config)
+        astro = parser.parse(  # type: ignore
+            module_name=module_name, module_content=module_content, ast_module=ast_module, yapper_config=yapper_config
+        )
         # create the path and output directories as needed
         astro_path = Path(out_path)
         astro_path.parent.mkdir(parents=True, exist_ok=True)

@@ -2,7 +2,6 @@
 module docstring content
 more content
 """
-from __future__ import annotations
 
 
 def mock_function(param_a: int, param_b: int | float = 2) -> int | float | None:

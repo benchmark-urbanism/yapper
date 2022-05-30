@@ -1,5 +1,6 @@
 import ast
 import copy
+import importlib
 from pathlib import Path
 
 import pytest
@@ -85,7 +86,13 @@ def test_parse():
     args_basic = cli.arg_parser.parse_args(["--config", "./tests/yap_config_basic.toml"])
     yapper_config_basic = handler.load_config(args_basic)
     yapper_config_basic = handler.process_config(yapper_config_basic)
-    astro = parser.parse(module_name="tests.mock_file", ast_module=ast_module, yapper_config=yapper_config_basic)
+    module_content = importlib.import_module("tests.comparisons.mock_file")
+    astro = parser.parse(
+        module_name="tests.comparisons.mock_file",
+        module_content=module_content,
+        ast_module=ast_module,
+        yapper_config=yapper_config_basic,
+    )
     with open("./tests/comparisons/generated_default.html", mode="w") as out_file:
         out_file.write(astro)
     with open("./tests/comparisons/expected_default.html") as expected_html:
@@ -95,7 +102,13 @@ def test_parse():
     args_custom = cli.arg_parser.parse_args(["--config", "./tests/yap_config_custom.toml"])
     yapper_config_custom = handler.load_config(args_custom)
     yapper_config_custom = handler.process_config(yapper_config_custom)
-    astro = parser.parse(module_name="tests.mock_file", ast_module=ast_module, yapper_config=yapper_config_custom)
+    module_content = importlib.import_module("tests.comparisons.mock_file")
+    astro = parser.parse(
+        module_name="tests.comparisons.mock_file",
+        module_content=module_content,
+        ast_module=ast_module,
+        yapper_config=yapper_config_custom,
+    )
     with open("./tests/comparisons/generated_custom.html", mode="w") as out_file:
         out_file.write(astro)
     with open("./tests/comparisons/expected_custom.html") as expected_html:

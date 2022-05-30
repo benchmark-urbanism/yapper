@@ -7,5 +7,5 @@ import { Markdown } from 'astro/components';
 """
 outro_template = ""
 module_map = [
-  { module = "test.mock_file", py = "./tests/comparisons/mock_file.py", astro = "./tests/comparisons/mock_default.astro" },
+  { module = "tests.comparisons.mock_file", py = "./tests/comparisons/mock_file.py", astro = "./tests/comparisons/mock_default.astro" },
 ]
