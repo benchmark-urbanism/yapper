@@ -50,7 +50,7 @@ import { Markdown } from 'astro/components';
   <h1 class="yap module-title" id="test-mock-file">
     <a aria-hidden="true" href="#test-mock-file" tab_index="-1">
       <svg
-        ariaHidden="true"
+        aria-hidden="true"
         class="heading-icon"
         height="15px"
         viewbox="0 0 20 20"
@@ -72,7 +72,7 @@ M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4
     <h2 class="yap func-title" id="mock-function">
       <a aria-hidden="true" href="#mock-function" tab_index="-1">
         <svg
-          ariaHidden="true"
+          aria-hidden="true"
           class="heading-icon"
           height="15px"
           viewbox="0 0 20 20"

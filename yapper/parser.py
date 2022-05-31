@@ -42,7 +42,7 @@ def heading_linker(heading_level: str, heading_name: str, heading_cls: str):
             s = svg.svg(
                 xmlns="http://www.w3.org/2000/svg",
                 viewbox="0 0 20 20",
-                ariaHidden="true",
+                aria_hidden="true",
                 width="15px",
                 height="15px",
                 cls="heading-icon",
