@@ -163,17 +163,21 @@ def process_class(ast_class: ast.ClassDef, module_content: ModuleType) -> tags.s
             else:
                 methods.append(item)
     # process props
-    if props:
-        class_fragment = add_heading(doc_str_frag=class_fragment, heading="Properties")  # type: ignore
-    extract_class = getattr(module_content, ast_class.name)
-    class_types = get_type_hints(extract_class)
+    prop_names: list[str] = []
     for prop in props:
         if hasattr(prop, "name"):
             prop_name: str = prop.name  # type: ignore
         elif isinstance(prop, ast.AnnAssign):
-            prop_name: str = prop.target.id  # type: ignore
+            prop_name = prop.target.id  # type: ignore
         else:
             raise NotImplementedError(f"Unable to extract property name from: {prop}")
+        if not prop_name.startswith("_"):
+            prop_names.append(prop_name)
+    if prop_names:
+        class_fragment = add_heading(doc_str_frag=class_fragment, heading="Properties")  # type: ignore
+    extract_class = getattr(module_content, ast_class.name)
+    class_types = get_type_hints(extract_class)
+    for prop_name in prop_names:
         prop_type: str = ""
         if prop_name in class_types:
             prop_type = class_types[prop_name].__name__
@@ -301,7 +305,7 @@ def process_docstring(
                     param_description=param.description,  # type: ignore
                 )
         # track types parsed from return docstrings
-        n_return_types_in_docstring = 0
+        return_types_in_docstring: list[str] = []
         if parsed_doc_str.many_returns is not None and len(parsed_doc_str.many_returns):
             doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Returns")  # type: ignore
             for doc_str_return in parsed_doc_str.many_returns:
@@ -309,10 +313,10 @@ def process_docstring(
                     param_type = None
                 else:
                     param_type = doc_str_return.type_name
-                    n_return_types_in_docstring += 1  # type: ignore
+                    return_types_in_docstring.append(param_type)  # type: ignore
                 # if there is a single return and if the return types are not specified,
                 # then infer return types from the signature if available
-                if len(parsed_doc_str.many_returns) == 1 and not n_return_types_in_docstring:
+                if len(parsed_doc_str.many_returns) == 1 and not return_types_in_docstring:
                     param_type = return_type
                 doc_str_frag = add_param_set(
                     doc_str_frag=doc_str_frag,
@@ -320,20 +324,20 @@ def process_docstring(
                     param_type=param_type,  # type: ignore
                     param_description=doc_str_return.description,  # type: ignore
                 )
+        # compare return types extracted from docstring to those in function return type
         n_return_types_in_sig = 0
         if return_type:
             trimmed = return_type.lstrip("tuple[").rstrip("]")
             n_return_types_in_sig = len(trimmed.split(","))
         # if types were provided in both the signature and the docstring, check that these match
-        if (
-            n_return_types_in_docstring or n_return_types_in_sig
-        ) and n_return_types_in_docstring != n_return_types_in_sig:
+        if (return_types_in_docstring or n_return_types_in_sig) and len(
+            return_types_in_docstring
+        ) != n_return_types_in_sig:
             logger.warning(
                 f"""
-            Mismatching number of return types in docstring vs. function signature:
-            paramter: {param_names}
-            types deduced per signature: {n_return_types_in_sig}
-            types deduced from doc-str: {n_return_types_in_docstring}
+            Potential types mismatch as spec'd in docstring vs. function signature:
+            types deduced per signature: {return_type}
+            types deduced from doc-str: {return_types_in_docstring}
             """
             )
         if len(parsed_doc_str.raises):
