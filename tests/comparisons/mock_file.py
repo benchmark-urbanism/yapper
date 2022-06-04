@@ -10,9 +10,9 @@ def mock_function(param_a: int, param_b: int | float = 2) -> int | float | None:
 
     Parameters
     ----------
-    param_a
+    param_a: int
         A *test* _param_.
-    param_b
+    param_b: float
         Another *test* _param_.
 
         | col A |: col B |
@@ -22,7 +22,7 @@ def mock_function(param_a: int, param_b: int | float = 2) -> int | float | None:
 
     Returns
     -------
-    summed_number: int | float
+    summed_number: float
         The sum of _param_a_ and _param_b_.
     None
         None returned if values are negative.
@@ -89,9 +89,9 @@ class ChildClass(ParentClass):
 
         Parameters
         ----------
-        param_c
+        param_c: float
             Yet another test param.
-        param_d
+        param_d: float
             And another.
         kwargs
             Keyword args.

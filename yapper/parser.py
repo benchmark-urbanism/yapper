@@ -28,7 +28,7 @@ M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4
 """
 
 
-def heading_linker(heading_level: str, heading_name: str, heading_cls: str):
+def generate_heading(heading_level: str, heading_name: str, heading_cls: str):
     """Create a heading of specified level with a link anchor."""
     if heading_level == "h1":
         h = tags.h1(id=slugify(heading_name), cls=heading_cls)
@@ -37,11 +37,11 @@ def heading_linker(heading_level: str, heading_name: str, heading_cls: str):
     else:
         raise NotImplementedError(f"Heading level {heading_level} is not implemented for linking.")
     with h:
-        a = tags.a(aria_hidden="true", tab_index="-1", href=f"#{slugify(heading_name)}")
+        a = tags.a(aria_hidden="true", tabindex="-1", href=f"#{slugify(heading_name)}")
         with a:
             s = svg.svg(
                 xmlns="http://www.w3.org/2000/svg",
-                viewbox="0 0 20 20",
+                viewBox="0 0 20 20",
                 aria_hidden="true",
                 width="15px",
                 height="15px",
@@ -123,9 +123,15 @@ def process_class(ast_class: ast.ClassDef, module_content: ModuleType) -> tags.s
     """Process a python class."""
     if ast_class is None:
         return None
+    logger.info(f"Processing class {ast_class.name}.")
     # build class fragment
     class_fragment: tags.section = tags.section(cls="yap class")
-    class_fragment += heading_linker(heading_level="h2", heading_name=ast_class.name, heading_cls="yap class-title")
+    class_fragment += generate_heading(heading_level="h2", heading_name=ast_class.name, heading_cls="yap class-title")
+    # class docstring
+    class_doc_str = ast.get_docstring(ast_class)
+    if class_doc_str is not None:
+        frag_text = class_doc_str.replace("\n", " ").strip()
+        class_fragment = add_markdown(fragment=class_fragment, text=frag_text)  # type: ignore
     # base classes
     for base in ast_class.bases:
         with class_fragment:
@@ -138,13 +144,7 @@ def process_class(ast_class: ast.ClassDef, module_content: ModuleType) -> tags.s
     methods: list[ast.FunctionDef] = []
     props: list[ast.Expr | ast.AnnAssign | ast.FunctionDef] = []
     for item in ast_class.body:
-        if isinstance(item, ast.Expr):
-            if isinstance(item.value, ast.Constant):
-                desc = item.value.value.strip()
-                class_fragment = add_markdown(fragment=class_fragment, text=desc)  # type: ignore
-            else:
-                raise NotImplementedError(f"Unable to process item: {type(item)}")
-        elif isinstance(item, ast.AnnAssign):
+        if isinstance(item, ast.AnnAssign):
             props.append(item)
         elif isinstance(item, ast.FunctionDef):
             is_property = False
@@ -236,7 +236,7 @@ def add_heading(doc_str_frag: tags.div | tags.section, heading: str) -> tags.div
     return doc_str_frag
 
 
-def add_param_set(doc_str_frag: tags.div, param_name: str, param_type: str, param_description: str) -> tags.div:
+def add_param_set(doc_str_frag: tags.div, param_name: str, param_type: str | None, param_description: str) -> tags.div:
     """Add a parameter set."""
     if param_name is None:
         param_name = ""
@@ -258,7 +258,7 @@ def add_param_set(doc_str_frag: tags.div, param_name: str, param_type: str, para
 
 
 def process_docstring(
-    doc_str: str | None, param_names: list[str], param_types: list[str], return_type: str
+    doc_str: str | None, sig_param_names: list[str], sig_param_types: list[str], sig_return_type: str
 ) -> tags.div:
     """Process a docstring."""
     doc_str_frag: tags.div = tags.div(cls="yap")
@@ -269,12 +269,12 @@ def process_docstring(
             if parsed_doc_str.long_description is not None:
                 desc += f"\n{parsed_doc_str.long_description}"
             doc_str_frag = add_markdown(fragment=doc_str_frag, text=desc)  # type: ignore
-        if (len(param_names) and parsed_doc_str.params is None) or (len(param_names) != len(parsed_doc_str.params)):
+        if (sig_param_names and parsed_doc_str.params is None) or (len(sig_param_names) != len(parsed_doc_str.params)):
             logger.warning(
                 f"""
             Number of docstring params does not match number of signature params.
             Please check that all function parameters have been declared in the docstring.
-            Signature paramaters: {param_names}
+            Signature paramaters: {sig_param_names}
             Parsed doc-str params: {parsed_doc_str.params}
             Doc string: {doc_str}
             """
@@ -287,21 +287,21 @@ def process_docstring(
                     param_name = param_name.lstrip("**")
                     param_name = f"**{param_name}"
                 try:
-                    param_idx = param_names.index(param_name)
+                    param_idx = sig_param_names.index(param_name)
                 except ValueError as err:
                     raise ValueError(
                         f"Docstring param: {param_name} not found in function signature parameters."
                     ) from err
-                param_type = param_types[param_idx]
-                if param.type_name is not None and param.type_name not in param_type:
-                    raise ValueError(
-                        f"Docstring param {param_name} conflicts function typehint: "
-                        f"Docstring type is {param.type_name} vs. param typehint of {param_type}."
+                sig_param_type = sig_param_types[param_idx]
+                if param.type_name is not None and param.type_name != sig_param_type:
+                    logger.warning(
+                        f"Docstring param {param_name} mismatches function typehint, this may be intentional: "
+                        f"Docstring type is {param.type_name} vs. param typehint of {sig_param_type}."
                     )
                 doc_str_frag = add_param_set(
                     doc_str_frag=doc_str_frag,
                     param_name=param_name,
-                    param_type=param_type,
+                    param_type=param.type_name,
                     param_description=param.description,  # type: ignore
                 )
         # track types parsed from return docstrings
@@ -317,7 +317,8 @@ def process_docstring(
                 # if there is a single return and if the return types are not specified,
                 # then infer return types from the signature if available
                 if len(parsed_doc_str.many_returns) == 1 and not return_types_in_docstring:
-                    param_type = return_type
+                    param_type = sig_return_type
+                # add fragment
                 doc_str_frag = add_param_set(
                     doc_str_frag=doc_str_frag,
                     param_name=doc_str_return.return_name,  # type: ignore
@@ -326,17 +327,17 @@ def process_docstring(
                 )
         # compare return types extracted from docstring to those in function return type
         n_return_types_in_sig = 0
-        if return_type:
-            trimmed = return_type.lstrip("tuple[").rstrip("]")
+        if sig_return_type:
+            trimmed = sig_return_type.lstrip("tuple[").rstrip("]")
             n_return_types_in_sig = len(trimmed.split(","))
-        # if types were provided in both the signature and the docstring, check that these match
+        # if types were provided in both the signature and the docstring, check whether these match
         if (return_types_in_docstring or n_return_types_in_sig) and len(
             return_types_in_docstring
         ) != n_return_types_in_sig:
             logger.warning(
                 f"""
-            Potential types mismatch as spec'd in docstring vs. function signature:
-            types deduced per signature: {return_type}
+            Potential types mismatch as spec'd in docstring vs. function signature. This may be intentional:
+            types deduced per signature: {sig_return_type}
             types deduced from doc-str: {return_types_in_docstring}
             """
             )
@@ -382,6 +383,7 @@ def process_function(
     # don't process private members
     if ast_function.name.startswith("_") and not ast_function.name == "__init__":
         return None
+    logger.info(f"Processing function: {ast_function.name}")
     func_fragment: tags.section = tags.section(cls="yap func")
     if class_name and ast_function.name == "__init__":
         func_name = f"{class_name}.__init__"
@@ -389,38 +391,38 @@ def process_function(
         func_name = f"{class_name}.{ast_function.name}"
     else:
         func_name = ast_function.name
-    func_fragment += heading_linker(heading_level="h2", heading_name=func_name, heading_cls="yap func-title")
+    func_fragment += generate_heading(heading_level="h2", heading_name=func_name, heading_cls="yap func-title")
     # extract parameters, types, defaults
-    param_names: list[str] = []
-    param_types: list[str] = []
-    param_defaults: list[str | None] = []
+    sig_param_names: list[str] = []
+    sig_param_types: list[str] = []
+    sig_param_defaults: list[str | None] = []
     # pad defaults to keep in sync
     pad = len(ast_function.args.args) - len(ast_function.args.defaults)
     for idx, arg in enumerate(ast_function.args.args):
         if arg.arg == "self":
             continue
-        param_names.append(arg.arg)
+        sig_param_names.append(arg.arg)
         if arg.arg in types_dict:
             if hasattr(types_dict[arg.arg], "__name__"):
-                param_types.append(types_dict[arg.arg].__name__)
+                sig_param_types.append(types_dict[arg.arg].__name__)
             else:
-                param_types.append(str(types_dict[arg.arg]))
+                sig_param_types.append(str(types_dict[arg.arg]))
         else:
-            param_types.append("")
+            sig_param_types.append("")
         if idx < pad:
-            param_defaults.append(None)
+            sig_param_defaults.append(None)
         elif hasattr(ast_function.args.defaults[idx - pad], "value"):
-            param_defaults.append(getattr(ast_function.args.defaults[idx - pad], "value"))
+            sig_param_defaults.append(getattr(ast_function.args.defaults[idx - pad], "value"))
         else:
-            param_defaults.append("(*)")
+            sig_param_defaults.append("(*)")
     if hasattr(ast_function.args, "kwarg") and ast_function.args.kwarg is not None:
-        param_names.append("**kwargs")
-        param_types.append("")
-        param_defaults.append(None)
+        sig_param_names.append("**kwargs")
+        sig_param_types.append("")
+        sig_param_defaults.append(None)
     # process signature
     with func_fragment:
         tags.div(cls="yap func-sig-content").appendChild(  # type: ignore
-            process_signature(func_name=func_name, param_names=param_names, param_defaults=param_defaults)
+            process_signature(func_name=func_name, param_names=sig_param_names, param_defaults=sig_param_defaults)
         )
     # extract return types
     return_type: str = ""
@@ -429,7 +431,12 @@ def process_function(
     # process docstring
     doc_str = ast.get_docstring(ast_function)
     func_fragment.appendChild(  # type: ignore
-        process_docstring(doc_str=doc_str, param_names=param_names, param_types=param_types, return_type=return_type)
+        process_docstring(
+            doc_str=doc_str,
+            sig_param_names=sig_param_names,
+            sig_param_types=sig_param_types,
+            sig_return_type=return_type,
+        )
     )
 
     return func_fragment
@@ -437,13 +444,14 @@ def process_function(
 
 def parse(module_name: str, module_content: ModuleType, ast_module: ast.Module, yapper_config: YapperConfig) -> str:
     """Parse a python module."""
+    logger.info(f"Parsing module: {module_name}")
     # start the DOM fragment
     dom_fragment: tags.div = tags.div(cls="yap module")
-    dom_fragment += heading_linker(heading_level="h1", heading_name=module_name, heading_cls="yap module-title")
+    dom_fragment += generate_heading(heading_level="h1", heading_name=module_name, heading_cls="yap module-title")
     # module docstring
-    module_docstring = ast.get_docstring(ast_module)
-    if module_docstring is not None:
-        frag_text = module_docstring.replace("\n", " ").strip()
+    module_doc_str = ast.get_docstring(ast_module)
+    if module_doc_str is not None:
+        frag_text = module_doc_str.replace("\n", " ").strip()
         dom_fragment = add_markdown(fragment=dom_fragment, text=frag_text)  # type: ignore
     # iterate the module's members
     for item in ast_module.body:
