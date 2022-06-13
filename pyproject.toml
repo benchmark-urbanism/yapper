@@ -37,12 +37,12 @@ dev = [
     "black>=22.3.0",
     "isort>=5.10.1",
     "pydocstyle>=6.1.1",
-    # coverage -> temporarily removed until PDM update which allows dependencies to depend on prereleases
     "types-python-slugify>=5.0.4",
     "types-toml>=0.10.7",
     "pyright>=1.1.246",
     "setuptools>=62.3.2",
     "twine>=4.0.0",
+    "coverage>=6.4.1",
 ]
 
 [project.urls]
@@ -83,7 +83,6 @@ max-args = 10
 max-line-length = 120
 
 [tool.pylint.logging]
-logging_format_style = "new"
 
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md#sample-pyprojecttoml-file
 [tool.pyright]
