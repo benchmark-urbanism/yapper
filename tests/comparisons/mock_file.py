@@ -61,20 +61,25 @@ class ParentClass:
     """
 
     parent_prop: str
+    """Parent prop description."""
 
-    def __init__(self, **kwargs: dict):
+    def __init__(self, a_param: str):
         """
         Parent initialisation.
 
         Parameters
         ----------
-        kwargs
-            Keyword args.
+        a_param: str
+            A parameter.
         """
-        self.parent_prop = "bee"
+        self.parent_prop = a_param
 
     def _boo(self):
-        """should be ignored"""
+        """should be ignored."""
+        pass
+
+    def no_param(self):
+        """No params."""
         pass
 
 
@@ -83,7 +88,7 @@ class ChildClass(ParentClass):
     A child class
     """
 
-    def __init__(self, param_c: float = 1.1, param_d: float = 0.9, **kwargs: dict):
+    def __init__(self, param_c: float = 1.1, param_d: float = 0.9):
         """
         Child initialisation.
 
@@ -93,13 +98,10 @@ class ChildClass(ParentClass):
             Yet another test param.
         param_d: float
             And another.
-        kwargs
-            Keyword args.
         """
-        super().__init__(**kwargs)
+        super().__init__("boo")
         self.param_c = param_c
         self.param_d = param_d
-        print(f"ignoring {kwargs}")
 
     @property
     def param_e(self):
