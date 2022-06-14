@@ -212,21 +212,25 @@ def process_signature(func_name: str, param_names: list[str], param_defaults: li
     """Process function signature."""
     # process signature
     sig_fragment: tags.div = tags.div(cls="yap func-sig")
-    with sig_fragment:
-        tags.span(f"{func_name}(")
-    # nest sig params for CSS alignment
-    sig_params_fragment = tags.div(cls="yap func-sig-params")
-    for idx, (param_name, param_default) in enumerate(zip(param_names, param_defaults)):
-        param = f"{param_name}"
-        if param_default is not None:
-            param += f"={param_default}"
-        if idx < len(param_names) - 1:
-            param += ", "
-        with sig_params_fragment:
-            tags.div(param, cls="yap func-sig-param")
-    with sig_params_fragment:
-        tags.span(")")
-    sig_fragment += sig_params_fragment
+    if not param_names:
+        with sig_fragment:
+            tags.span(f"{func_name}()")
+    else:
+        with sig_fragment:
+            tags.span(f"{func_name}(")
+        # nest sig params for CSS alignment
+        sig_params_fragment = tags.div(cls="yap func-sig-params")
+        for idx, (param_name, param_default) in enumerate(zip(param_names, param_defaults)):
+            param_text = f"{param_name}"
+            if param_default is not None:
+                param_text += f"={param_default}"
+            if idx < len(param_names) - 1:
+                param_text += ", "
+            else:
+                param_text += ")"
+            with sig_params_fragment:
+                tags.div(param_text, cls="yap func-sig-param")
+        sig_fragment += sig_params_fragment
     return sig_fragment
 
 
