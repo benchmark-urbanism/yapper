@@ -58,6 +58,10 @@ def mock_function(param_a: int, param_b: int | float = 2) -> int | float | None:
 class ParentClass:
     """
     A parent class
+
+    :::warning
+    An admonition
+    :::
     """
 
     parent_prop: str
@@ -71,6 +75,9 @@ class ParentClass:
         ----------
         a_param: str
             A parameter.
+            :::note
+            Another admonition
+            :::
         """
         self.parent_prop = a_param
 

@@ -78,42 +78,45 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
     code_block = False
     code_padding = None
     admonition = False
-    text = ""
+    trailing_line: str | None = None
+    cleaned_text = ""
     for next_line in splits:
         # code blocks
         if "```" in next_line:
             if code_block is False:
                 code_block = True
                 code_padding = next_line.index("```")
-                text += f"\n{next_line[code_padding:]}"
+                cleaned_text += f"\n{next_line[code_padding:]}"
             else:
-                text += f"\n{next_line[code_padding:]}\n"
+                cleaned_text += f"\n{next_line[code_padding:]}\n"
                 code_block = False
                 code_padding = None
         elif code_block:
-            text += f"\n{next_line[code_padding:]}"
+            cleaned_text += f"\n{next_line[code_padding:]}"
         # double breaks
         elif next_line == "":
-            text += "\n\n"
+            if trailing_line is not None and trailing_line != "":
+                cleaned_text += "\n"
         # admonitions
         elif ":::" in next_line:
             admonition = True
-            text += f"\n{next_line.strip()}"
+            cleaned_text += f"\n{next_line.strip()}"
         elif admonition is True:
             admonition = False
-            text += f"\n{next_line.strip()}"
+            cleaned_text += f"\n{next_line.strip()}"
         # tables
         elif next_line.strip().startswith("|") and next_line.strip().endswith("|"):
-            text += f"\n{next_line.strip()}"
+            cleaned_text += f"\n{next_line.strip()}"
         # otherwise weld if possible
-        elif weld_candidate(text, next_line):
-            text += f" {next_line.strip()}"
+        elif weld_candidate(cleaned_text, next_line):
+            cleaned_text += f" {next_line.strip()}"
         else:
-            text += f"\n{next_line.strip()}"
+            cleaned_text += f"\n{next_line.strip()}"
+        trailing_line = next_line
     if code_block:
-        raise ValueError(f"Unclosed code block or admonition encountered for content: \n{text}")
-    text += "\n"
-    md: Markdown = Markdown(text)
+        raise ValueError(f"Unclosed code block or admonition encountered for content: \n{cleaned_text}")
+    cleaned_text += "\n"
+    md: Markdown = Markdown(cleaned_text)
     # add is:raw directive
     fragment += util.raw(md.render().replace("<Markdown>", "<Markdown is:raw>"))  # type: ignore
     return fragment
@@ -130,8 +133,7 @@ def process_class(ast_class: ast.ClassDef, module_content: ModuleType) -> tags.s
     # class docstring
     class_doc_str = ast.get_docstring(ast_class)
     if class_doc_str is not None:
-        frag_text = class_doc_str.replace("\n", " ").strip()
-        class_fragment = add_markdown(fragment=class_fragment, text=frag_text)  # type: ignore
+        class_fragment = add_markdown(fragment=class_fragment, text=class_doc_str)  # type: ignore
     # base classes
     for base in ast_class.bases:
         with class_fragment:
@@ -256,7 +258,7 @@ def add_param_set(doc_str_frag: tags.div, param_name: str, param_type: str | Non
     return doc_str_frag
 
 
-def process_docstring(
+def process_func_docstring(
     doc_str: str | None, sig_param_names: list[str], sig_param_types: list[str], sig_return_type: str
 ) -> tags.div:
     """Process a docstring."""
@@ -294,8 +296,12 @@ def process_docstring(
                 sig_param_type = sig_param_types[param_idx]
                 if param.type_name is not None and param.type_name != sig_param_type:
                     logger.warning(
-                        f"Docstring param {param_name} mismatches function typehint, this may be intentional: "
-                        f"Docstring type is {param.type_name} vs. param typehint of {sig_param_type}."
+                        f"""
+                    Parameter types mismatch in docstring vs. AST for param {param_name}.
+                    This may be intentional:
+                    Type deduced per docstring: {param.type_name}
+                    Type deduced from AST param: {sig_param_type}
+                    """
                     )
                 doc_str_frag = add_param_set(
                     doc_str_frag=doc_str_frag,
@@ -335,9 +341,10 @@ def process_docstring(
         ) != n_return_types_in_sig:
             logger.warning(
                 f"""
-            Potential types mismatch as spec'd in docstring vs. function signature. This may be intentional:
-            types deduced per signature: {sig_return_type}
-            types deduced from doc-str: {return_types_in_docstring}
+            Possible return type mismatch in docstring vs. function signature.
+            This may be intentional:
+            Type deduced per signature: {sig_return_type}
+            Type deduced from doc-str: {return_types_in_docstring}
             """
             )
         if len(parsed_doc_str.raises):
@@ -433,7 +440,7 @@ def process_function(
     # process docstring
     doc_str = ast.get_docstring(ast_function)
     func_fragment.appendChild(  # type: ignore
-        process_docstring(
+        process_func_docstring(
             doc_str=doc_str,
             sig_param_names=sig_param_names,
             sig_param_types=sig_param_types,
@@ -453,8 +460,7 @@ def parse(module_name: str, module_content: ModuleType, ast_module: ast.Module, 
     # module docstring
     module_doc_str = ast.get_docstring(ast_module)
     if module_doc_str is not None:
-        frag_text = module_doc_str.replace("\n", " ").strip()
-        dom_fragment = add_markdown(fragment=dom_fragment, text=frag_text)  # type: ignore
+        dom_fragment = add_markdown(fragment=dom_fragment, text=module_doc_str)  # type: ignore
     # iterate the module's members
     for item in ast_module.body:
         # process functions
