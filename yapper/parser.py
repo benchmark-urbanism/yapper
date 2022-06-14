@@ -222,9 +222,9 @@ def process_signature(func_name: str, param_names: list[str], param_defaults: li
             param += ", "
         with sig_params_fragment:
             tags.div(param, cls="yap func-sig-param")
-    sig_fragment += sig_params_fragment
-    with sig_fragment:
+    with sig_params_fragment:
         tags.span(")")
+    sig_fragment += sig_params_fragment
     return sig_fragment
 
 
