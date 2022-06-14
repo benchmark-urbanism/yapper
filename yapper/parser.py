@@ -78,7 +78,6 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
     code_block = False
     code_padding = None
     admonition = False
-    trailing_line: str | None = None
     cleaned_text = ""
     for next_line in splits:
         # code blocks
@@ -95,8 +94,7 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
             cleaned_text += f"\n{next_line[code_padding:]}"
         # double breaks
         elif next_line == "":
-            if trailing_line is not None and trailing_line != "":
-                cleaned_text += "\n"
+            cleaned_text += "\n\n"
         # admonitions
         elif ":::" in next_line:
             admonition = True
@@ -112,10 +110,10 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
             cleaned_text += f" {next_line.strip()}"
         else:
             cleaned_text += f"\n{next_line.strip()}"
-        trailing_line = next_line
     if code_block:
         raise ValueError(f"Unclosed code block or admonition encountered for content: \n{cleaned_text}")
     cleaned_text += "\n"
+    cleaned_text = cleaned_text.replace("\n\n\n", "\n\n")
     md: Markdown = Markdown(cleaned_text)
     # add is:raw directive
     fragment += util.raw(md.render().replace("<Markdown>", "<Markdown is:raw>"))  # type: ignore
