@@ -148,17 +148,21 @@ def process_class(ast_class: ast.ClassDef, module_content: ModuleType) -> tags.s
             props.append(item)
         elif isinstance(item, ast.FunctionDef):
             is_property = False
+            is_setter = False
             for dec in item.decorator_list:
-                if isinstance(dec, ast.Name):
+                if hasattr(dec, "attr"):
+                    if getattr(dec, "attr") == "setter":
+                        is_setter = True
+                elif isinstance(dec, ast.Name):
                     if dec.id == "property":
                         is_property = True
-                    else:
-                        raise NotImplementedError(f"Unable to process decorator: {dec}")
                 elif isinstance(dec, ast.Attribute) and dec.attr == "setter":
                     logger.warning(f"Skipping setter for {item.name}")
                 else:
                     raise NotImplementedError(f"Unable to process decorator: {dec}")
-            if is_property:
+            if is_setter:
+                continue
+            elif is_property:
                 props.append(item)
             else:
                 methods.append(item)

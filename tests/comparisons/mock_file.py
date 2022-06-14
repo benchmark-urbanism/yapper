@@ -115,6 +115,10 @@ class ChildClass(ParentClass):
         """A property describing property param_e"""
         return self.param_c + self.param_d
 
+    @param_e.setter
+    def param_e(self, param_e: float):
+        self.param_c = param_e - self.param_d
+
     def hello(self) -> str:
         """
         A random class method returning "hello"
