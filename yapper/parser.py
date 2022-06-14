@@ -96,7 +96,7 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
         elif next_line == "":
             cleaned_text += "\n\n"
         # admonitions
-        elif ":::" in next_line or "$$" in next_line:
+        elif next_line.startswith(":::") or next_line.startswith("$$"):
             if not other_block:
                 other_block = True
                 cleaned_text += f"\n{next_line.strip()}"
@@ -113,7 +113,7 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
             cleaned_text += f" {next_line.strip()}"
         else:
             cleaned_text += f"\n{next_line.strip()}"
-    if code_block:
+    if code_block or other_block:
         raise ValueError(f"Unclosed code block or admonition encountered for content: \n{cleaned_text}")
     cleaned_text += "\n"
     cleaned_text = cleaned_text.replace("\n\n\n", "\n\n")
