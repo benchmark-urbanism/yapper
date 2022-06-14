@@ -162,7 +162,7 @@ def process_class(ast_class: ast.ClassDef, module_content: ModuleType) -> tags.s
                     raise NotImplementedError(f"Unable to process decorator: {dec}")
             if is_setter:
                 continue
-            elif is_property:
+            if is_property:
                 props.append(item)
             else:
                 methods.append(item)
