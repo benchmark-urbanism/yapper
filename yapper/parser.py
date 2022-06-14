@@ -75,9 +75,9 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
     if text is not None:
         content_str = text.strip()
     splits = content_str.split("\n")
-    code_block = False
     code_padding = None
-    admonition = False
+    code_block = False
+    other_block = False
     cleaned_text = ""
     for next_line in splits:
         # code blocks
@@ -96,14 +96,14 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
         elif next_line == "":
             cleaned_text += "\n\n"
         # admonitions
-        elif ":::" in next_line:
-            if not admonition:
-                admonition = True
+        elif ":::" in next_line or "$$" in next_line:
+            if not other_block:
+                other_block = True
                 cleaned_text += f"\n{next_line.strip()}"
             else:
-                admonition = False
+                other_block = False
                 cleaned_text += f"\n{next_line.strip()}"
-        elif admonition:
+        elif other_block:
             cleaned_text += f"\n{next_line.strip()}"
         # tables
         elif next_line.strip().startswith("|") and next_line.strip().endswith("|"):

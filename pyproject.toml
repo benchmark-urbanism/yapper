@@ -1,6 +1,6 @@
 [project]
 name = "yapper"
-version = "0.3.0b16"
+version = "0.3.0b17"
 description = "Parser for converting python docstrings to .astro files for the Astro static site generator."
 readme = 'README.md'
 requires-python = ">=3.10,<4.0"
