@@ -2,9 +2,9 @@
 
 Yapper converts Python docstrings to `astro` files for use by the [Astro](https://astro.build/) static site generator.
 
-It uses the `ast` module to parse class and function signatures and uses [`docstring_parser`](https://github.com/rr-/docstring_parser) to parse docstrings, which is compatible with several common docstring styles, e.g. `google` and `numpy`.
+It uses the `ast` module to parse class and function signatures and uses [`docstring_parser`](https://github.com/rr-/docstring_parser) to parse docstrings, which is compatible with several common docstring styles such as `google` and `numpy`.
 
-Types will be inferred from signature typehints. If types are specified in docstrings and if these don't match the signature types, this will raise an error.
+Types will be inferred from docstrings. Warnings will be logged if types specified in docstrings don't match those specified in function signatures.
 
 Docstrings and parameter descriptions will be passed through as a raw markdown wrapped in the Astro `<Markdown is:raw></Markdown>` elements.
 

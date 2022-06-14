@@ -97,10 +97,13 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
             cleaned_text += "\n\n"
         # admonitions
         elif ":::" in next_line:
-            admonition = True
-            cleaned_text += f"\n{next_line.strip()}"
-        elif admonition is True:
-            admonition = False
+            if not admonition:
+                admonition = True
+                cleaned_text += f"\n{next_line.strip()}"
+            else:
+                admonition = False
+                cleaned_text += f"\n{next_line.strip()}"
+        elif admonition:
             cleaned_text += f"\n{next_line.strip()}"
         # tables
         elif next_line.strip().startswith("|") and next_line.strip().endswith("|"):
