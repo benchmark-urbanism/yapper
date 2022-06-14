@@ -3,6 +3,8 @@ module docstring content
 more content
 """
 
+GLOBAL_VAR = 0.9
+
 
 def mock_function(param_a: int, param_b: int | float = 2) -> int | float | None:
     """
@@ -95,7 +97,7 @@ class ChildClass(ParentClass):
     A child class
     """
 
-    def __init__(self, param_c: float = 1.1, param_d: float = 0.9):
+    def __init__(self, param_c: float = 1.1, param_d: float = GLOBAL_VAR):
         """
         Child initialisation.
 

@@ -203,7 +203,9 @@ def process_class(ast_class: ast.ClassDef, module_content: ModuleType) -> tags.s
         # extract the class method's content
         extract_func = getattr(extract_class, method.name)
         func_types = get_type_hints(extract_func)
-        func_fragment = process_function(ast_function=method, types_dict=func_types, class_name=ast_class.name)
+        func_fragment = process_function(
+            ast_function=method, types_dict=func_types, module_content=module_content, class_name=ast_class.name
+        )
         if func_fragment is not None:
             class_fragment += func_fragment
 
@@ -389,6 +391,7 @@ def process_func_docstring(
 def process_function(
     ast_function: ast.FunctionDef | ast.AsyncFunctionDef,
     types_dict: dict[str, type],
+    module_content: ModuleType,
     class_name: str | None = None,
 ) -> tags.section | None:
     """Process a function."""
@@ -426,10 +429,17 @@ def process_function(
             sig_param_types.append("")
         if idx < pad:
             sig_param_defaults.append(None)
-        elif hasattr(ast_function.args.defaults[idx - pad], "value"):
-            sig_param_defaults.append(getattr(ast_function.args.defaults[idx - pad], "value"))
         else:
-            sig_param_defaults.append("(*)")
+            def_val = ast_function.args.defaults[idx - pad]
+            if isinstance(def_val, ast.Constant):
+                sig_param_defaults.append(getattr(def_val, "value"))
+            elif isinstance(def_val, ast.Name):
+                # try to find name / var as global
+                if hasattr(module_content, def_val.id):
+                    global_val = getattr(module_content, def_val.id)
+                    sig_param_defaults.append(global_val)
+                else:
+                    sig_param_defaults.append(def_val.id)
     if hasattr(ast_function.args, "kwarg") and ast_function.args.kwarg is not None:
         sig_param_names.append("**kwargs")
         sig_param_types.append("")
@@ -475,7 +485,7 @@ def parse(module_name: str, module_content: ModuleType, ast_module: ast.Module, 
                 continue
             extract_func = getattr(module_content, item.name)
             func_types = get_type_hints(extract_func)
-            dom_fragment += process_function(item, func_types)
+            dom_fragment += process_function(item, func_types, module_content)
         # process classes and nested methods
         elif isinstance(item, ast.ClassDef):
             dom_fragment += process_class(item, module_content)
