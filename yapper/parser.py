@@ -385,12 +385,15 @@ def process_function(
     logger.info(f"Processing function: {ast_function.name}")
     func_fragment: tags.section = tags.section(cls="yap func")
     if class_name and ast_function.name == "__init__":
-        func_name = f"{class_name}.__init__"
+        heading_name = f"{class_name}.__init__"
+        func_name = class_name
     elif class_name:
-        func_name = f"{class_name}.{ast_function.name}"
-    else:
+        heading_name = f"{class_name}.{ast_function.name}"
         func_name = ast_function.name
-    func_fragment += generate_heading(heading_level="h2", heading_name=func_name, heading_cls="yap func-title")
+    else:
+        heading_name = ast_function.name
+        func_name = ast_function.name
+    func_fragment += generate_heading(heading_level="h2", heading_name=heading_name, heading_cls="yap func-title")
     # extract parameters, types, defaults
     sig_param_names: list[str] = []
     sig_param_types: list[str] = []
