@@ -1,0 +1,16 @@
+[tool.yapper]
+package_root_relative_path = './'
+intro_template = """
+---
+import { Markdown } from 'astro/components';
+import PageLayout from '../layouts/PageLayout.astro'
+---
+
+<PageLayout>
+"""
+outro_template = """
+</PageLayout>
+"""
+module_map = [
+  { module = "tests.comparisons.mock_file", py = "./tests/comparisons/mock_file.py", astro = "./tests/comparisons/mock_custom.astro" },
+]

@@ -1,0 +1,10 @@
+exclude .*
+exclude build
+include tests/**
+include yapper/**
+exclude *.egg-info
+exclude coverage.lcov
+include LICENSE.txt
+exclude *pdm*
+include pyproject.toml
+include README.md

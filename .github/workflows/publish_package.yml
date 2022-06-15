@@ -2,23 +2,27 @@ name: publish package
 on:
   push:
     tags-ignore:
-      - '*.*.*[ab]*'
+      - "*.*.*[ab]*"
 jobs:
   publish-package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
       - uses: pdm-project/setup-pdm@main
         name: Setup PDM
         with:
-          python-version: 3.9
+          python-version: "3.10"
           prerelease: true
           enable-pep582: true
-      - name: Install dependencies
+      - name: Install and build
         run: |
           pdm install
-          pdm plugin add pdm-publish
-      - name: Publish
-        run: |
-          pdm run tests
-          pdm publish --password ${{secrets.PYPI_TOKEN}}
+          pdm run build_project
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.YAPPER_PYPI }}
