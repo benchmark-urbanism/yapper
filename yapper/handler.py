@@ -2,6 +2,7 @@
 """
 Yapper logic for loading and processing the config, and for using the config to parse docstrings to astro files.
 """
+from __future__ import annotations
 
 import argparse
 import ast

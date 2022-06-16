@@ -3,6 +3,7 @@ Uses AST and docstring_parser to parse docstrings to astro html.
 
 Intended for use with the Astro static site generator where further linting / linking / styling is done downstream.
 """
+from __future__ import annotations
 
 import ast
 import logging

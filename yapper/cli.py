@@ -2,6 +2,8 @@
 """
 Yapper cli interface for invoking the methods in the handler module.
 """
+from __future__ import annotations
+
 import argparse
 
 from yapper import handler
