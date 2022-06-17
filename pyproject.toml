@@ -1,27 +1,27 @@
 [project]
 name = "yapper"
-version = "0.3.1"
+version = "0.3.2"
 description = "Parser for converting python docstrings to .astro files for the Astro static site generator."
 readme = 'README.md'
-requires-python = ">=3.8,<4.0"
+requires-python = ">=3.7,<4.0"
 license = { text = "MIT" }
 keywords = [
-    'python',
-    'static-site-generator',
-    'astro',
-    'parser',
-    'documentation',
-    'docstrings',
+  'python',
+  'static-site-generator',
+  'astro',
+  'parser',
+  'documentation',
+  'docstrings',
 ]
 authors = [{ name = "Gareth Simons", email = "info@benchmarkurbanism.com" }]
 maintainers = [{ name = "Gareth Simons", email = "info@benchmarkurbanism.com" }]
 classifiers = ["Programming Language :: Python"]
 dependencies = [
-    "docstring-parser<1.0,>=0.13",
-    "dominate<3.0.0,>=2.6.0",
-    "python-slugify<7.0.0,>=6.1.1",
-    "Markdown<4.0.0,>=3.3.6",
-    "toml>=0.10.2",
+  "docstring-parser<1.0,>=0.13",
+  "dominate<3.0.0,>=2.6.0",
+  "python-slugify<7.0.0,>=6.1.1",
+  "Markdown<4.0.0,>=3.3.6",
+  "toml>=0.10.2",
 ]
 dynamic = ["entry-points"]
 
@@ -31,18 +31,18 @@ yapper = "yapper.cli:parse_cli"
 [project.optional-dependencies]
 [tool.pdm.dev-dependencies]
 dev = [
-    "pytest>=7.1.1",
-    "setuptools-scm>=6.4.2",
-    "pylint>=2.13.7",
-    "black>=22.3.0",
-    "isort>=5.10.1",
-    "pydocstyle>=6.1.1",
-    "types-python-slugify>=5.0.4",
-    "types-toml>=0.10.7",
-    "pyright>=1.1.246",
-    "setuptools>=62.3.2",
-    "twine>=4.0.0",
-    "coverage>=6.4.1",
+  "pytest>=7.1.1",
+  "setuptools-scm>=6.4.2",
+  "pylint>=2.13.7",
+  "black>=22.3.0",
+  "isort>=5.10.1",
+  "pydocstyle>=6.1.1",
+  "types-python-slugify>=5.0.4",
+  "types-toml>=0.10.7",
+  "pyright>=1.1.246",
+  "setuptools>=62.3.2",
+  "twine>=4.0.0",
+  "coverage>=6.4.1",
 ]
 
 [project.urls]
@@ -63,12 +63,12 @@ color = true
 
 [tool.pylint.master]
 disable = [
-    "too-many-branches",
-    "too-many-statements",
-    "too-many-locals",
-    "missing-module-docstring",
-    "logging-fstring-interpolation",
-    "unspecified-encoding",
+  "too-many-branches",
+  "too-many-statements",
+  "too-many-locals",
+  "missing-module-docstring",
+  "logging-fstring-interpolation",
+  "unspecified-encoding",
 ]
 jobs = 0
 output-format = "colorized"
@@ -89,10 +89,10 @@ max-line-length = 120
 pythonVersion = '3.10'
 include = ["yapper"]
 exclude = [
-    "**/node_modules",
-    "**/__pycache__",
-    "__pypackages__",
-    "yapper/stubs",
+  "**/node_modules",
+  "**/__pycache__",
+  "__pypackages__",
+  "yapper/stubs",
 ]
 typeCheckingMode = "strict"
 stubPath = "yapper/stubs"
@@ -126,10 +126,10 @@ omit = ["**/__init__.py"]
 [tool.pydocstyle]
 # http://www.pydocstyle.org/en/stable/error_codes.html
 ignore = [
-    "D100", # Missing docstring in public module
-    "D200", # One-line docstring should fit on one line with quotes
-    "D203", # 1 blank line required before class docstring
-    "D212", # Multi-line docstring summary should start at the first line
+  "D100", # Missing docstring in public module
+  "D200", # One-line docstring should fit on one line with quotes
+  "D203", # 1 blank line required before class docstring
+  "D212", # Multi-line docstring summary should start at the first line
 ]
 match = "(?!test_).*\\.py"
 match_dir = "^(?!(__pypackages__|build|tests)).*"
