@@ -3,7 +3,7 @@ name = "yapper"
 version = "0.3.3"
 description = "Parser for converting python docstrings to .astro files for the Astro static site generator."
 readme = 'README.md'
-requires-python = ">=3.7,<4.0"
+requires-python = ">=3.8,<4.0"
 license = { text = "MIT" }
 keywords = [
   'python',
