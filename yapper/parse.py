@@ -121,7 +121,7 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
     md: Markdown = Markdown(util.raw(cleaned_text))
     # add is:raw directive
     fragment += util.raw(md.render().replace("<Markdown>", "<Markdown is:raw>"))  # type: ignore
-    return fragment
+    return md
 
 
 def process_class(ast_class: ast.ClassDef, module_content: ModuleType) -> tags.section | None:
