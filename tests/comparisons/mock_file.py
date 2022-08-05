@@ -40,6 +40,8 @@ def mock_function(param_a: int, param_b: Union[int, float] = 2) -> Optional[Unio
     ```python
     print(mock_function(1, 2))
     # prints 3
+    print("boo")
+    print('boo')
     ```
 
     Random text

@@ -118,7 +118,7 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
         raise ValueError(f"Unclosed code block or admonition encountered for content: \n{cleaned_text}")
     cleaned_text += "\n"
     cleaned_text = cleaned_text.replace("\n\n\n", "\n\n")
-    md: Markdown = Markdown(cleaned_text)
+    md: Markdown = Markdown(util.raw(cleaned_text))  # type: ignore
     # add is:raw directive
     fragment += util.raw(md.render().replace("<Markdown>", "<Markdown is:raw>"))  # type: ignore
     return fragment
