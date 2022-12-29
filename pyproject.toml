@@ -17,11 +17,12 @@ authors = [{ name = "Gareth Simons", email = "info@benchmarkurbanism.com" }]
 maintainers = [{ name = "Gareth Simons", email = "info@benchmarkurbanism.com" }]
 classifiers = ["Programming Language :: Python"]
 dependencies = [
-  "docstring-parser<1.0,>=0.13",
-  "dominate<3.0.0,>=2.6.0",
-  "python-slugify<7.0.0,>=6.1.1",
-  "Markdown<4.0.0,>=3.3.6",
-  "toml>=0.10.2",
+    "docstring-parser<1.0,>=0.13",
+    "dominate<3.0.0,>=2.6.0",
+    "python-slugify<7.0.0,>=6.1.1",
+    "Markdown<4.0.0,>=3.3.6",
+    "toml>=0.10.2",
+    "pdoc>=12.3.0",
 ]
 dynamic = ["entry-points"]
 

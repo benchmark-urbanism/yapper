@@ -1,5 +1,8 @@
 # Yapper
 
+> NOTE: currently exploring pdoc - but templating doesn't extend to function names and parameters, so not enough control.
+> run per: `pdoc -t templates -d numpy tests/comparisons/mock_file.py -o tests/comparisons/explore.py`
+
 Yapper converts Python docstrings to `astro` files for use by the [Astro](https://astro.build/) static site generator.
 
 It uses the `ast` module to parse class and function signatures and uses [`docstring_parser`](https://github.com/rr-/docstring_parser) to parse docstrings, which is compatible with several common docstring styles such as `google` and `numpy`.

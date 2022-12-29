@@ -1,0 +1,374 @@
+---
+import { Markdown } from 'astro/components';
+import PageLayout from '../layouts/PageLayout.astro'
+---
+
+<PageLayout>
+  <section class="yap module">
+    <h1 class="yap module-title" id="mock_file">mock_file</h1>
+
+    <div class="docstring"><p>module docstring content more content</p></div>
+
+    <section class="yap function">
+      <h2 class="yap func-title" id="mock_function">
+        <a aria-hidden="true" href="#mock_function" tabindex="-1">
+          <svg
+            aria-hidden="true"
+            class="heading-icon"
+            height="15px"
+            viewBox="0 0 20 20"
+            width="15px"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              clip-rule="evenodd"
+              d="
+                M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z
+                "
+              fill-rule="evenodd"
+            ></path></svg
+        ></a>
+        mock_function
+      </h2>
+      <span class="signature pdoc-code multiline"
+        >(<span class="param">
+          <span class="n">param_a</span><span class="p">:</span>
+          <span class="nb">int</span>,</span
+        ><span class="param">
+          <span class="n">param_b</span><span class="p">:</span>
+          <span class="n">Union</span><span class="p">[</span
+          ><span class="nb">int</span><span class="p">,</span>
+          <span class="nb">float</span><span class="p">]</span>
+          <span class="o">=</span> <span class="mi">2</span></span
+        ><span class="return-annotation"
+          >) -> <span class="n">Union</span><span class="p">[</span
+          ><span class="nb">int</span><span class="p">,</span>
+          <span class="nb">float</span><span class="p">,</span>
+          <span class="n">NoneType</span><span class="p">]</span>:</span
+        ></span
+      >
+    </section>
+    <div class="docstring">
+      <p>
+        A mock function returning a sum of param_a and param_b if positive
+        numbers, else None
+      </p>
+
+      <h6 id="parameters">Parameters</h6>
+
+      <ul>
+        <li><strong>param_a</strong> (int): A <em>test</em> _param_.</li>
+        <li>
+          <p>
+            <strong>param_b</strong> (float): Another <em>test</em> _param_.
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>col A</th>
+                <th>: col B</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>boo</td>
+                <td>baa</td>
+              </tr>
+              <tr>
+                <td>more content across broken line</td>
+              </tr>
+            </tbody>
+          </table>
+        </li>
+      </ul>
+
+      <h6 id="returns">Returns</h6>
+
+      <ul>
+        <li>
+          <strong>summed_number</strong> (float): The sum of _param_a_ and
+          _param_b_.
+        </li>
+        <li><strong>None</strong>: None returned if values are negative.</li>
+      </ul>
+
+      <h6 id="raises">Raises</h6>
+
+      <ul>
+        <li>
+          <strong>ValueError</strong>: Raises value error if params are not
+          numbers.
+        </li>
+      </ul>
+
+      <h6 id="notes">Notes</h6>
+
+      <div class="pdoc-code codehilite">
+        <pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="n">mock_function</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="c1"># prints 3</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;boo&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;boo&#39;</span><span class="p">)</span>
+</code></pre>
+      </div>
+
+      <p>Random text</p>
+
+      <p>_Random table_</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>col A</th>
+            <th>: col B</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>boo</td>
+            <td>baa</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <section class="yap class">
+      <h2 class="yap class-title">
+        <a aria-hidden="true" href="#ParentClass" tabindex="-1">
+          <svg
+            aria-hidden="true"
+            class="heading-icon"
+            height="15px"
+            viewBox="0 0 20 20"
+            width="15px"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              clip-rule="evenodd"
+              d="
+                M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z
+                "
+              fill-rule="evenodd"
+            ></path></svg
+        ></a>
+        ParentClass
+      </h2>
+      :
+    </section>
+    <div class="docstring">
+      <p>A parent class</p>
+
+      <p>:::warning An admonition :::</p>
+    </div>
+
+    <div id="ParentClass.__init__" class="classattr">
+      <section class="yap function">
+        <h2 class="yap func-title" id="ParentClass.__init__">
+          <a aria-hidden="true" href="#ParentClass.__init__" tabindex="-1">
+            <svg
+              aria-hidden="true"
+              class="heading-icon"
+              height="15px"
+              viewBox="0 0 20 20"
+              width="15px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                clip-rule="evenodd"
+                d="
+                M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z
+                "
+                fill-rule="evenodd"
+              ></path></svg
+          ></a>
+          ParentClass
+        </h2>
+        <span class="signature pdoc-code condensed"
+          >(<span class="param"
+            ><span class="n">a_param</span><span class="p">:</span>
+            <span class="nb">str</span></span
+          >)</span
+        >
+      </section>
+      <div class="docstring">
+        <p>Parent initialisation.</p>
+
+        <h6 id="parameters">Parameters</h6>
+
+        <ul>
+          <li>
+            <strong>a_param</strong> (str): A parameter. :::note Another
+            admonition :::
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div id="ParentClass.parent_prop" class="classattr">
+      <section class="yap variable">
+        <span class="yap name">parent_prop</span
+        ><span class="yap annotation">: str</span>
+      </section>
+      <div class="docstring"><p>Parent prop description.</p></div>
+    </div>
+    <div id="ParentClass.no_param" class="classattr">
+      <section class="yap function">
+        <h2 class="yap func-title" id="ParentClass.no_param">
+          <a aria-hidden="true" href="#ParentClass.no_param" tabindex="-1">
+            <svg
+              aria-hidden="true"
+              class="heading-icon"
+              height="15px"
+              viewBox="0 0 20 20"
+              width="15px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                clip-rule="evenodd"
+                d="
+                M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z
+                "
+                fill-rule="evenodd"
+              ></path></svg
+          ></a>
+          no_param
+        </h2>
+        <span class="signature pdoc-code condensed"
+          >(<span class="param"><span class="bp">self</span></span
+          ><span class="return-annotation">):</span></span
+        >
+      </section>
+      <div class="docstring"><p>No params.</p></div>
+    </div>
+    <section class="yap class">
+      <h2 class="yap class-title">
+        <a aria-hidden="true" href="#ChildClass" tabindex="-1">
+          <svg
+            aria-hidden="true"
+            class="heading-icon"
+            height="15px"
+            viewBox="0 0 20 20"
+            width="15px"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              clip-rule="evenodd"
+              d="
+                M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z
+                "
+              fill-rule="evenodd"
+            ></path></svg
+        ></a>
+        ChildClass
+      </h2>
+      <wbr />(<span class="yap base"
+        ><a href="#ParentClass">ParentClass</a></span
+      >):
+    </section>
+    <div class="docstring"><p>A child class</p></div>
+
+    <div id="ChildClass.__init__" class="classattr">
+      <section class="yap function">
+        <h2 class="yap func-title" id="ChildClass.__init__">
+          <a aria-hidden="true" href="#ChildClass.__init__" tabindex="-1">
+            <svg
+              aria-hidden="true"
+              class="heading-icon"
+              height="15px"
+              viewBox="0 0 20 20"
+              width="15px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                clip-rule="evenodd"
+                d="
+                M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z
+                "
+                fill-rule="evenodd"
+              ></path></svg
+          ></a>
+          ChildClass
+        </h2>
+        <span class="signature pdoc-code condensed"
+          >(<span class="param"
+            ><span class="n">param_c</span><span class="p">:</span>
+            <span class="nb">float</span> <span class="o">=</span>
+            <span class="mf">1.1</span>, </span
+          ><span class="param"
+            ><span class="n">param_d</span><span class="p">:</span>
+            <span class="nb">float</span> <span class="o">=</span>
+            <span class="mf">0.9</span></span
+          >)</span
+        >
+      </section>
+      <div class="docstring">
+        <p>Child initialisation.</p>
+
+        <h6 id="parameters">Parameters</h6>
+
+        <ul>
+          <li><strong>param_c</strong> (float): Yet another test param.</li>
+          <li><strong>param_d</strong> (float): And another.</li>
+        </ul>
+      </div>
+    </div>
+    <div id="ChildClass.param_e" class="classattr">
+      <section class="yap variable">
+        <span class="yap name">param_e</span>
+      </section>
+      <div class="docstring"><p>A property describing property param_e</p></div>
+    </div>
+    <div id="ChildClass.hello" class="classattr">
+      <section class="yap function">
+        <h2 class="yap func-title" id="ChildClass.hello">
+          <a aria-hidden="true" href="#ChildClass.hello" tabindex="-1">
+            <svg
+              aria-hidden="true"
+              class="heading-icon"
+              height="15px"
+              viewBox="0 0 20 20"
+              width="15px"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                clip-rule="evenodd"
+                d="
+                M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z
+                "
+                fill-rule="evenodd"
+              ></path></svg
+          ></a>
+          hello
+        </h2>
+        <span class="signature pdoc-code condensed"
+          >(<span class="param"><span class="bp">self</span></span
+          ><span class="return-annotation"
+            >) -> <span class="nb">str</span>:</span
+          ></span
+        >
+      </section>
+      <div class="docstring">
+        <p>A random class method returning "hello"</p>
+
+        <h6 id="returns">Returns</h6>
+
+        <ul>
+          <li><strong>str</strong> (saying_hello): A string saying "hello"</li>
+        </ul>
+      </div>
+    </div>
+    <div class="inherited">
+      <h5>Inherited Members</h5>
+      <dl>
+        <div>
+          <dt><a href="#ParentClass">ParentClass</a></dt>
+          <dd id="ChildClass.parent_prop" class="variable">
+            <a href="#ParentClass.parent_prop">parent_prop</a>
+          </dd>
+          <dd id="ChildClass.no_param" class="function">
+            <a href="#ParentClass.no_param">no_param</a>
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+</PageLayout>

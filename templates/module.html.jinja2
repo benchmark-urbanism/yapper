@@ -1,0 +1,164 @@
+{% extends "frame.html.jinja2" %}
+{% block content %}
+    <section class="yap module">
+        {% block module_info %}
+            {{ module_name() }}
+            {{ docstring(module) }}
+        {% endblock %}
+        {% block module_contents %}
+            {% for m in module.flattened_own_members if is_public(m) | trim %}
+                {{ member(m) }}
+                {% if m.kind == "class" %}
+                    {% for m in m.own_members if m.kind != "class" and is_public(m) | trim %}
+                        <div id="{{ m.qualname }}" class="classattr">
+                            {{ member(m) }}
+                        </div>
+                    {% endfor %}
+                    {% set inherited_members = inherited(m) | trim %}
+                    {% if inherited_members %}
+                        <div class="inherited">
+                            <h5>Inherited Members</h5>
+                            <dl>
+                                {{ inherited_members }}
+                            </dl>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        {% endblock %}
+    </section>
+    {% if mtime %}
+        {% include "livereload.html.jinja2" %}
+    {% endif %}
+    {% block search_js %}
+        {% if search and all_modules|length > 1 %}
+            {% include "search.html.jinja2" %}
+        {% endif %}
+    {% endblock %}
+{% endblock content %}
+{#
+End of content, beginning of helper macros.
+See https://pdoc.dev/docs/pdoc/render_helpers.html#DefaultMacroExtension for an explanation of defaultmacro.
+#}
+{% defaultmacro bases(cls) %}
+    {%- if cls.bases -%}
+        <wbr>(
+        {%- for base in cls.bases -%}
+            <span class="yap base">{{ base[:2] | link(text=base[2]) }}</span>
+            {%- if loop.nextitem %}, {% endif %}
+        {%- endfor -%}
+        )
+    {%- endif -%}
+{% enddefaultmacro %}
+{% defaultmacro default_value(var) -%}
+    {%- if var.default_value_str -%}
+        <span class="yap default_value">{{ var.default_value_str | escape | linkify }}</span>
+    {%- endif -%}
+{% enddefaultmacro %}
+{% defaultmacro annotation(var) %}
+    {%- if var.annotation_str -%}
+        <span class="yap annotation">{{ var.annotation_str | escape | linkify }}</span>
+    {%- endif -%}
+{% enddefaultmacro %}
+{% defaultmacro decorators(doc) %}
+    {% for d in doc.decorators if not d.startswith("@_") %}
+        <div class="yap decorator">{{ d }}</div>
+    {% endfor %}
+{% enddefaultmacro %}
+{% defaultmacro function(fn) -%}
+    {{ decorators(fn) }}
+    {% if fn.name == "__init__" %}
+        <h2 class="yap func-title" id="{{ fn.qualname or fn.name }}">{{ linkhead(fn) }}{{ ".".join(fn.qualname.split(".")[:-1]) }}</h2>
+        {{- fn.signature_without_self | format_signature(colon=False) | linkify }}
+    {% else %}
+        <h2 class="yap func-title" id="{{ fn.qualname or fn.name }}">{{ linkhead(fn) }}{{ fn.name }}</h2>
+        {{- fn.signature | format_signature(colon=True) | linkify }}
+    {% endif %}
+{% enddefaultmacro %}
+{% defaultmacro variable(var) -%}
+    <span class="yap name">{{ var.name }}</span>{{ annotation(var) }}{{ default_value(var) }}
+{% enddefaultmacro %}
+{% defaultmacro submodule(mod) -%}
+    <span class="yap name">{{ mod.taken_from | link }}</span>
+{% enddefaultmacro %}
+{% defaultmacro class(cls) -%}
+    {{ decorators(cls) }}
+    <h2 class="yap class-title">{{ linkhead(cls) }}{{ cls.qualname }}</h2>
+    {{- bases(cls) -}}:
+{% enddefaultmacro %}
+{% defaultmacro member(doc) %}
+    <section class="yap {{ doc.kind }}">
+        {% if doc.kind == "class" %}
+            {{ class(doc) }}
+        {% elif doc.kind == "function" %}
+            {{ function(doc) }}
+        {% elif doc.kind == "module" %}
+            {{ submodule(doc) }}
+        {% else %}
+            {{ variable(doc) }}
+        {% endif %}
+    </section>
+    {{ docstring(doc) }}
+{% enddefaultmacro %}
+{% defaultmacro linkhead(doc) %}
+    <a aria-hidden="true" href="#{{ doc.qualname or doc.name }}" tabindex="-1">
+        <svg aria-hidden="true" class="heading-icon" height="15px" viewBox="0 0 20 20" width="15px" xmlns="http://www.w3.org/2000/svg">
+            <path clip-rule="evenodd" d="
+                M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z
+                " fill-rule="evenodd">
+            </path></svg></a>
+{% enddefaultmacro %}
+{% defaultmacro docstring(var) %}
+    {% if var.docstring %}
+        <div class="docstring">{{ var.docstring | to_markdown | to_html | linkify(namespace=var.qualname) }}</div>
+    {% endif %}
+{% enddefaultmacro %}
+{% defaultmacro is_public(doc) %}
+    {#
+    This macro is a bit unconventional in that its output is not rendered, but treated as a boolean:
+    Returning no text is interpreted as false, returning any other text is iterpreted as true.
+    Implementing this as a macro makes it very easy to override with a custom template, see
+    https://github.com/mitmproxy/pdoc/tree/main/examples/custom-template.
+    #}
+    {% if doc.name == "__init__" %}
+        {# show all constructors #}
+        true
+    {% elif doc.name == "__doc__" %}
+        {# We don't want to document __doc__ itself, https://github.com/mitmproxy/pdoc/issues/235 #}
+    {% elif doc.kind == "module" and doc.fullname not in all_modules %}
+        {# Skip modules that were manually excluded, https://github.com/mitmproxy/pdoc/issues/334 #}
+    {% elif (doc.qualname or doc.name) is in(module.obj.__all__ or []) %}
+        {# members starting with an underscore are still public if mentioned in __all__ #}
+        true
+    {% elif not doc.name.startswith("_") and (doc.kind != "variable" or doc.is_enum_member or doc.docstring) %}
+        {# members not starting with an underscore are considered public by default #}
+        true
+    {% endif %}
+{% enddefaultmacro %}
+{# fmt: off #}
+{% defaultmacro inherited(cls) %}
+    {% for base, members in cls.inherited_members.items() %}
+        {% set m = None %}{# workaround for https://github.com/pallets/jinja/issues/1427 #}
+        {% set member_html %}
+            {% for m in members if is_public(m) | trim %}
+                <dd id="{{ m.qualname }}" class="{{ m.kind }}">
+                    {{- m.taken_from | link(text=m.name.replace("__init__",base[1])) -}}
+                </dd>
+            {% endfor %}
+        {% endset %}
+        {# we may not have any public members, in which case we don't want to print anything. #}
+        {% if member_html %}
+            <div><dt>{{ base | link }}</dt>
+                {{ member_html }}
+            </div>
+        {% endif %}
+    {% endfor %}
+{% enddefaultmacro %}
+{# fmt: on #}
+{% defaultmacro module_name() %}
+    <h1 class="yap module-title" id="{{ module.modulename }}">
+    {% if module.namespace %}
+        {{ module.namespace }}.
+    {% endif %}
+    {{ module.name }}</h1>
+{% enddefaultmacro %}
