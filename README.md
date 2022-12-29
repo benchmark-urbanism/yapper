@@ -2,6 +2,7 @@
 
 > NOTE: currently exploring pdoc - but templating doesn't extend to function names and parameters, so not enough control.
 > run per: `pdoc -t templates -d numpy tests/comparisons/mock_file.py -o tests/comparisons/explore.py`
+> see github issue: [https://github.com/mitmproxy/pdoc/issues/480](https://github.com/mitmproxy/pdoc/issues/480)
 
 Yapper converts Python docstrings to `astro` files for use by the [Astro](https://astro.build/) static site generator.
 
