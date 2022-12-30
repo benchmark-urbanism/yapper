@@ -196,7 +196,7 @@ def process_signature(module_function: Function) -> tags.div:
     sig_fragment: tags.div = tags.div(cls="yap func-sig")
     # use parent class if __init__ method
     if module_function.name == "__init__":
-        func_name = module_function.parent.name
+        func_name = module_function.parent.name  # type: ignore
     else:
         func_name = module_function.name
     n_params = 0
@@ -316,9 +316,9 @@ def process_function(
     if isinstance(module_function.parent, Class):
         is_method = True
     if is_method and module_function.name == "__init__":
-        heading_name = f"{module_function.parent.name}.__init__"
+        heading_name = f"{module_function.parent.name}.__init__"  # type: ignore
     elif is_method:
-        heading_name = f"{module_function.parent.name}.{module_function.name}"
+        heading_name = f"{module_function.parent.name}.{module_function.name}"  # type: ignore
     else:
         heading_name = module_function.name
     func_fragment += generate_heading(heading_level="h2", heading_name=heading_name, heading_cls="yap func-title")
