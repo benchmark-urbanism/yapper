@@ -248,7 +248,20 @@ def add_docstr_params(doc_str_frag: tags.div, param_set: docstringContentType) -
         param_name = param_set.name  # type: ignore
     param_anno = "None"
     if param_set.annotation is not None and hasattr(param_set.annotation, "full"):
-        param_anno = str(param_set.annotation.full)  # type: ignore
+        if hasattr(param_set.annotation, "full"):
+            param_anno = str(param_set.annotation.full)  # type: ignore
+    # strip away extraneous annotation information
+    if param_anno.startswith("Optional"):
+        param_anno = param_anno.replace("Optional[", "")
+        param_anno = param_anno[:-1]
+    if param_anno.startswith("Union"):
+        param_anno = param_anno.replace("Union[", "")
+        param_anno = param_anno[:-1]
+        param_anno = param_anno.split(",")
+        param_anno = "|".join([pa.strip() for pa in param_anno])
+    # only remain tail descriptor
+    if "." in param_anno and not "np." in param_anno or "npt." in param_anno:
+        param_anno = param_anno.rsplit(".", maxsplit=1)[-1]
     elem_desc_frag = tags.div(cls="yap doc-str-elem-desc")
     elem_desc_frag = add_markdown(fragment=elem_desc_frag, text=param_set.description)
     with doc_str_frag:
@@ -272,24 +285,9 @@ def process_func_docstring(module_function: Function) -> tags.div:
         for doc_str_content in doc_str:
             if isinstance(doc_str_content, DocstringSectionText):
                 text_content = doc_str_content.value
-                # if prefaced with a heading
-                extracted = False
-                for meta_title in ["Notes"]:
-                    if text_content.startswith(meta_title):
-                        text_content = text_content.lstrip(meta_title)
-                        text_content = text_content.lstrip("\n")
-                        text_content = text_content.lstrip("-")
-                        text_content = text_content.lstrip("\n")
-                        metas_frag = tags.div(cls="yap doc-str-meta")
-                        metas_frag = add_heading(doc_str_frag=metas_frag, heading=meta_title)
-                        metas_frag = add_markdown(fragment=metas_frag, text=text_content)  # type: ignore
-                        doc_str_frag += metas_frag
-                        extracted = True
-                        break
-                # otherwise, add directly
-                if extracted is False:
-                    doc_str_frag = add_markdown(fragment=doc_str_frag, text=text_content)  # type: ignore
+                doc_str_frag = add_markdown(fragment=doc_str_frag, text=text_content)  # type: ignore
             elif isinstance(doc_str_content, DocstringSectionExamples):
+                doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Examples")  # type: ignore
                 for content in doc_str_content.value:
                     for sub_content in content:
                         if isinstance(sub_content, str):
