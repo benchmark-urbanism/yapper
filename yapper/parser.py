@@ -267,7 +267,7 @@ def add_docstr_params(doc_str_frag: tags.div, param_set: docstringContentType) -
 def process_func_docstring(module_function: Function) -> tags.div:
     """Process a docstring."""
     doc_str_frag: tags.div = tags.div(cls="yap")
-    if module_function.docstring is not None:
+    if module_function.docstring is not None:  # pylint: disable=too-many-nested-blocks
         doc_str = np_parser.parse(module_function.docstring)
         for doc_str_content in doc_str:
             if isinstance(doc_str_content, DocstringSectionText):
