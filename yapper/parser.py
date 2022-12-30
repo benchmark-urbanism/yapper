@@ -15,10 +15,13 @@ from griffe.docstrings.dataclasses import (
     DocstringRaise,
     DocstringReturn,
     DocstringSectionDeprecated,
+    DocstringSectionExamples,
     DocstringSectionParameters,
     DocstringSectionRaises,
     DocstringSectionReturns,
     DocstringSectionText,
+    DocstringSectionYields,
+    DocstringYield,
 )
 from slugify import slugify
 
@@ -235,7 +238,7 @@ def add_heading(doc_str_frag: tags.div | tags.section, heading: str) -> tags.div
     return doc_str_frag
 
 
-docstringContentType = DocstringParameter | DocstringReturn | DocstringRaise
+docstringContentType = DocstringParameter | DocstringReturn | DocstringRaise | DocstringYield
 
 
 def add_docstr_params(doc_str_frag: tags.div, param_set: docstringContentType) -> tags.div:
@@ -286,12 +289,21 @@ def process_func_docstring(module_function: Function) -> tags.div:
                 # otherwise, add directly
                 if extracted is False:
                     doc_str_frag = add_markdown(fragment=doc_str_frag, text=text_content)  # type: ignore
+            elif isinstance(doc_str_content, DocstringSectionExamples):
+                for content in doc_str_content.value:
+                    for sub_content in content:
+                        if isinstance(sub_content, str):
+                            doc_str_frag = add_markdown(fragment=doc_str_frag, text=sub_content)  # type: ignore
             elif isinstance(doc_str_content, DocstringSectionParameters):
                 doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Parameters")  # type: ignore
                 for content in doc_str_content.value:
                     doc_str_frag = add_docstr_params(doc_str_frag=doc_str_frag, param_set=content)
             elif isinstance(doc_str_content, DocstringSectionRaises):
                 doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Raises")  # type: ignore
+                for content in doc_str_content.value:
+                    doc_str_frag = add_docstr_params(doc_str_frag=doc_str_frag, param_set=content)
+            elif isinstance(doc_str_content, DocstringSectionYields):
+                doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Yields")  # type: ignore
                 for content in doc_str_content.value:
                     doc_str_frag = add_docstr_params(doc_str_frag=doc_str_frag, param_set=content)
             elif isinstance(doc_str_content, DocstringSectionReturns):
