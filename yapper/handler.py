@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 import toml
+from griffe.loader import GriffeLoader
 
 from yapper import YapperConfig, parser
 
@@ -69,7 +70,6 @@ def process_config(yapper_config: YapperConfig) -> YapperConfig:
     The "module_map" should consist of an array of inline tables. 
     Each inline table should contain: 
     - a "module" key with the module name; 
-    - a "py" key with the filepath to the input Python file; 
     - an "astro" key with output filepath for the astro file.
     """
     if "module_map" not in yapper_config:
@@ -81,14 +81,9 @@ def process_config(yapper_config: YapperConfig) -> YapperConfig:
             raise TypeError(err_msg)
         if "module" not in module_info.keys():
             raise KeyError(err_msg)
-        if "py" not in module_info.keys():
-            raise KeyError(err_msg)
         if "astro" not in module_info.keys():
             raise KeyError(err_msg)
-        py_path = module_info["py"]
         astro_path = module_info["astro"]
-        if not py_path.endswith(".py"):
-            raise ValueError(f'Expecting a python input file type ending in ".py" but encountered "{py_path}"')
         if not astro_path.endswith(".astro"):
             raise ValueError(f'Expecting an astro output file type ending in ".astro" but encountered "{astro_path}"')
     # check for invalid keys
@@ -118,21 +113,13 @@ def main(yapper_config: YapperConfig) -> None:
     sys.path.append(str(package_path))
     # parse the modules
     for module_info in yapper_config["module_map"]:
-        py_path = module_info["py"]
-        in_path = Path(package_path / py_path)
         astro_path = module_info["astro"]
         out_path = Path(package_path / astro_path)
-        logger.info(f"Processing {in_path} to {out_path}")
-        # get the module name
-        module_name = module_info["module"]
-        module_content = importlib.import_module(module_name)
-        # process the module to AST
-        with open(in_path) as py_file:
-            ast_module = ast.parse(py_file.read())
+        logger.info(f"Processing {module_info['module']} to {out_path}")
+        griffe_loader = GriffeLoader()
+        module_content = griffe_loader.load_module(module_info["module"])
         # parse
-        astro = parser.parse(  # type: ignore
-            module_name=module_name, module_content=module_content, ast_module=ast_module, yapper_config=yapper_config
-        )
+        astro = parser.parse(module_content=module_content, yapper_config=yapper_config)  # type: ignore
         # create the path and output directories as needed
         astro_path = Path(out_path)
         astro_path.parent.mkdir(parents=True, exist_ok=True)

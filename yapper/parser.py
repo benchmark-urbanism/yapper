@@ -5,23 +5,20 @@ Intended for use with the Astro static site generator where further linting / li
 """
 from __future__ import annotations
 
-import ast
 import logging
-from types import ModuleType
-from typing import get_type_hints
 
-import docstring_parser
 from dominate import dom_tag, svg, tags, util  # type: ignore
-from griffe.dataclasses import Class, Function
+from griffe.dataclasses import Class, Function, Module
 from griffe.docstrings import numpy as np_parser
 from griffe.docstrings.dataclasses import (
-    DocstringSectionDeprecated,
+    DocstringParameter,
+    DocstringRaise,
+    DocstringReturn,
     DocstringSectionParameters,
     DocstringSectionRaises,
     DocstringSectionReturns,
     DocstringSectionText,
 )
-from griffe.loader import GriffeLoader
 from slugify import slugify
 
 from yapper import YapperConfig
@@ -163,12 +160,17 @@ def process_class(module_class: Class) -> tags.section | None:
         class_fragment = add_heading(doc_str_frag=class_fragment, heading="Properties")  # type: ignore
     for prop_key in prop_keys:
         prop_val = module_class.attributes[prop_key]
+        prop_type = ""
+        if prop_val.annotation is not None and hasattr(prop_val.annotation, "full"):
+            prop_type = prop_val.annotation.full  # type: ignore
         prop_desc = ""
+        if prop_val.docstring is not None:
+            prop_desc = prop_val.docstring.value
         with class_fragment:
             tags.div(
                 tags.div(
                     tags.div(prop_val.name, cls="yap class-prop-def-name"),
-                    # TODO: tags.div(prop_type, cls="yap class-prop-def-type"),
+                    tags.div(prop_type, cls="yap class-prop-def-type"),
                     cls="yap class-prop-def",
                 ),
                 tags.div(prop_desc, cls="yap class-prop-def-desc"),
@@ -215,7 +217,7 @@ def process_signature(module_function: Function) -> tags.div:
             param_text = f"{param.name}"
             if param.default is not None:
                 param_text += f"={param.default}"
-            if idx < n_params - 1:
+            if idx < len(module_function.parameters) - 1:
                 param_text += ", "
             else:
                 param_text += ")"
@@ -232,19 +234,24 @@ def add_heading(doc_str_frag: tags.div | tags.section, heading: str) -> tags.div
     return doc_str_frag
 
 
-def add_param_set(doc_str_frag: tags.div, param_name: str, param_type: str | None, param_description: str) -> tags.div:
+docstringContentType = DocstringParameter | DocstringReturn | DocstringRaise
+
+
+def add_docstr_params(doc_str_frag: tags.div, param_set: docstringContentType) -> tags.div:
     """Add a parameter set."""
-    if param_name is None:
-        param_name = ""
-    if param_type is None or param_type == "None" or param_type == "":
-        param_type = str(None)
+    param_name = ""
+    if hasattr(param_set, "name") and param_set.name is not None:  # type: ignore
+        param_name = param_set.name  # type: ignore
+    param_anno = "None"
+    if param_set.annotation is not None and hasattr(param_set.annotation, "full"):
+        param_anno = str(param_set.annotation.full)  # type: ignore
     elem_desc_frag = tags.div(cls="yap doc-str-elem-desc")
-    elem_desc_frag = add_markdown(fragment=elem_desc_frag, text=param_description)
+    elem_desc_frag = add_markdown(fragment=elem_desc_frag, text=param_set.description)
     with doc_str_frag:
         tags.div(
             tags.div(
                 tags.div(param_name, cls="yap doc-str-elem-name"),
-                tags.div(param_type, cls="yap doc-str-elem-type"),
+                tags.div(param_anno, cls="yap doc-str-elem-type"),
                 cls="yap doc-str-elem-def",
             ),
             elem_desc_frag,
@@ -260,56 +267,38 @@ def process_func_docstring(module_function: Function) -> tags.div:
         doc_str = np_parser.parse(module_function.docstring)
         for doc_str_content in doc_str:
             if isinstance(doc_str_content, DocstringSectionText):
-                doc_str_frag = add_markdown(fragment=doc_str_frag, text=doc_str_content.value)  # type: ignore
+                text_content = doc_str_content.value
+                # if prefaced with a heading
+                extracted = False
+                for meta_title in ["Notes"]:
+                    if text_content.startswith(meta_title):
+                        text_content = text_content.lstrip(meta_title)
+                        text_content = text_content.lstrip("\n")
+                        text_content = text_content.lstrip("-")
+                        text_content = text_content.lstrip("\n")
+                        metas_frag = tags.div(cls="yap doc-str-meta")
+                        metas_frag = add_heading(doc_str_frag=metas_frag, heading=meta_title)
+                        metas_frag = add_markdown(fragment=metas_frag, text=text_content)  # type: ignore
+                        doc_str_frag += metas_frag
+                        extracted = True
+                        break
+                # otherwise, add directly
+                if extracted is False:
+                    doc_str_frag = add_markdown(fragment=doc_str_frag, text=text_content)  # type: ignore
             elif isinstance(doc_str_content, DocstringSectionParameters):
                 doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Parameters")  # type: ignore
                 for content in doc_str_content.value:
-                    param_name = content.name
-                    if "kwargs" in param_name:
-                        param_name = param_name.lstrip("**")
-                        param_name = f"**{param_name}"
-                    anno = ""
-                    if content.annotation is not None and hasattr(content.annotation, "full"):
-                        anno = str(content.annotation.full)
-                    doc_str_frag = add_param_set(
-                        doc_str_frag=doc_str_frag,
-                        param_name=param_name,
-                        param_type=anno,
-                        param_description=content.description,  # type: ignore
-                    )
+                    doc_str_frag = add_docstr_params(doc_str_frag=doc_str_frag, param_set=content)
             elif isinstance(doc_str_content, DocstringSectionRaises):
                 doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Raises")  # type: ignore
                 for content in doc_str_content.value:
-                    anno = ""
-                    if content.annotation is not None and hasattr(content.annotation, "full"):
-                        anno = str(content.annotation.full)
-                    doc_str_frag = add_param_set(
-                        doc_str_frag=doc_str_frag,
-                        param_name="",
-                        param_type=anno,
-                        param_description=content.description,  # type: ignore
-                    )
+                    doc_str_frag = add_docstr_params(doc_str_frag=doc_str_frag, param_set=content)
             elif isinstance(doc_str_content, DocstringSectionReturns):
                 doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Returns")  # type: ignore
                 for content in doc_str_content.value:
-                    anno = ""
-                    if content.annotation is not None and hasattr(content.annotation, "full"):
-                        anno = str(content.annotation.full)
-                    doc_str_frag = add_param_set(
-                        doc_str_frag=doc_str_frag,
-                        param_name=content.name,
-                        param_type=anno,
-                        param_description=content.description,  # type: ignore
-                    )
-            elif isinstance(doc_str_content, DocstringSectionDeprecated):
-                raise NotImplementedError("Deprecation not implemented.")
+                    doc_str_frag = add_docstr_params(doc_str_frag=doc_str_frag, param_set=content)
             else:
-                # raise NotImplementedError(f'Unhandled docstring section: {type(doc_str_content)}')
-                metas_frag = tags.div(cls="yap doc-str-meta")
-                metas_frag = add_heading(doc_str_frag=metas_frag, heading="Notes")
-                for meta in metas:
-                    metas_frag = add_markdown(fragment=metas_frag, text=meta.description)  # type: ignore
-                doc_str_frag += metas_frag
+                raise NotImplementedError("Deprecation not implemented.")
 
     return doc_str_frag
 
@@ -342,22 +331,19 @@ def process_function(
     return func_fragment
 
 
-def parse(module_name: str, module_content: ModuleType, ast_module: ast.Module, yapper_config: YapperConfig) -> str:
+def parse(module_content: Module, yapper_config: YapperConfig) -> str:
     """Parse a python module."""
-    logger.info(f"Parsing module: {module_name}")
-    # TODO: redo plumbing
-    loader = GriffeLoader()
-    module = loader.load_module("tests.comparisons.mock_file")
+    logger.info(f"Parsing module: {module_content.canonical_path}")
     # start the DOM fragment
     dom_fragment: tags.div = tags.div(cls="yap module")
     dom_fragment += generate_heading(
-        heading_level="h1", heading_name=module.canonical_path, heading_cls="yap module-title"
+        heading_level="h1", heading_name=module_content.canonical_path, heading_cls="yap module-title"
     )
     # module docstring
-    if module.docstring is not None:
-        dom_fragment = add_markdown(fragment=dom_fragment, text=module.docstring.value)
+    if module_content.docstring is not None:
+        dom_fragment = add_markdown(fragment=dom_fragment, text=module_content.docstring.value)  # type: ignore
     # iterate the module's members
-    for member in module.members.values():
+    for member in module_content.members.values():
         # process functions
         if isinstance(member, Function):
             if member.name.startswith("_"):

@@ -8,7 +8,6 @@ class ModuleMap(TypedDict):
     """Typed dict for module maps."""
 
     module: str
-    py: str
     astro: str
 
 

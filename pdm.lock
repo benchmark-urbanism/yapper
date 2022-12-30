@@ -102,12 +102,6 @@ requires_python = ">=3.7"
 summary = "serialize all of python"
 
 [[package]]
-name = "docstring-parser"
-version = "0.15"
-requires_python = ">=3.6,<4.0"
-summary = "Parse Python docstrings in reST, Google and Numpydoc format"
-
-[[package]]
 name = "docutils"
 version = "0.19"
 requires_python = ">=3.7"
@@ -497,7 +491,7 @@ summary = "Backport of pathlib-compatible object wrapper for zip files"
 
 [metadata]
 lock_version = "4.1"
-content_hash = "sha256:ed9ee8eee60cff68c10ad5041ef3f2202e191216203252ec4e1c8f36e82070cf"
+content_hash = "sha256:f39f865ebcbd1a186384451d2f2531c2cc790c5f35544080c0fb859b141506f9"
 
 [metadata.files]
 "astroid 2.12.13" = [
@@ -692,10 +686,6 @@ content_hash = "sha256:ed9ee8eee60cff68c10ad5041ef3f2202e191216203252ec4e1c8f36e
 "dill 0.3.6" = [
     {url = "https://files.pythonhosted.org/packages/7c/e7/364a09134e1062d4d5ff69b853a56cf61c223e0afcc6906b6832bcd51ea8/dill-0.3.6.tar.gz", hash = "sha256:e5db55f3687856d8fbdab002ed78544e1c4559a130302693d839dfe8f93f2373"},
     {url = "https://files.pythonhosted.org/packages/be/e3/a84bf2e561beed15813080d693b4b27573262433fced9c1d1fea59e60553/dill-0.3.6-py3-none-any.whl", hash = "sha256:a07ffd2351b8c678dfc4a856a3005f8067aea51d6ba6c700796a4d9e280f39f0"},
-]
-"docstring-parser 0.15" = [
-    {url = "https://files.pythonhosted.org/packages/89/e3/32e272db7adcf90e93f73e9a98fd763049ed7c641fb57ab26cb8f3e7e79c/docstring_parser-0.15-py3-none-any.whl", hash = "sha256:d1679b86250d269d06a99670924d6bce45adc00b08069dae8c47d98e89b667a9"},
-    {url = "https://files.pythonhosted.org/packages/e8/2d/ea1dfc15b909cc660f657a3a9d698a2916b7f3b05535a2d72e8d7ea3ad5b/docstring_parser-0.15.tar.gz", hash = "sha256:48ddc093e8b1865899956fcc03b03e66bb7240c310fac5af81814580c55bf682"},
 ]
 "docutils 0.19" = [
     {url = "https://files.pythonhosted.org/packages/6b/5c/330ea8d383eb2ce973df34d1239b3b21e91cd8c865d21ff82902d952f91f/docutils-0.19.tar.gz", hash = "sha256:33995a6753c30b7f577febfc2c50411fec6aac7f7ffeb7c4cfe5991072dcf9e6"},
