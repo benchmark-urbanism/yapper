@@ -11,9 +11,11 @@ from dominate import dom_tag, svg, tags, util  # type: ignore
 from griffe.dataclasses import Class, Function, Module
 from griffe.docstrings import numpy as np_parser
 from griffe.docstrings.dataclasses import (
+    DocstringDeprecated,
     DocstringParameter,
     DocstringRaise,
     DocstringReturn,
+    DocstringSectionDeprecated,
     DocstringSectionParameters,
     DocstringSectionRaises,
     DocstringSectionReturns,
@@ -297,8 +299,10 @@ def process_func_docstring(module_function: Function) -> tags.div:
                 doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Returns")  # type: ignore
                 for content in doc_str_content.value:
                     doc_str_frag = add_docstr_params(doc_str_frag=doc_str_frag, param_set=content)
+            elif isinstance(doc_str_content, DocstringSectionDeprecated):
+                doc_str_frag = add_markdown(fragment=doc_str_frag, text=doc_str_content.value)  # type: ignore
             else:
-                raise NotImplementedError("Deprecation not implemented.")
+                raise NotImplementedError(f"Docstring type: {type(doc_str_content)} not implemented.")
 
     return doc_str_frag
 

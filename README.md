@@ -2,9 +2,9 @@
 
 Yapper converts Python docstrings to `astro` files for use by the [Astro](https://astro.build/) static site generator.
 
-It uses [`griffe`](https://github.com/mkdocstrings/griffe) to parse numpy style docstrings.
+It uses [`griffe`](https://github.com/mkdocstrings/griffe) to parse python modules and extracts numpy style docstrings.
 
-It is up to the user to maintain consistency between types specified in signatures and docstrings. This can be preferable where docstrings represent less verbose typing information than might otherwise be necessary for function signatures.
+It is up to the user to maintain consistency between types specified in signatures and docstrings. Differences betweten the two can be preferable where docstrings represent simplified forms of typing information than might otherwise be necessary for function signatures.
 
 Docstrings and parameter descriptions will be passed through as a raw markdown wrapped in the Astro `<Markdown is:raw></Markdown>` elements.
 
@@ -63,6 +63,6 @@ The `module_map` is mandatory and specifies the names of the python modules to b
 
 ## Development
 
-`yapper` uses a `pyprojct.toml` file to specify project dependencies and scripts related to project development and publishing.
+`yapper` uses a `pyproject.toml` file to specify project dependencies and scripts related to project development and publishing.
 
 See `pyproject.toml` for available scripts.
