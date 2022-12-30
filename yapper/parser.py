@@ -11,7 +11,6 @@ from dominate import dom_tag, svg, tags, util  # type: ignore
 from griffe.dataclasses import Class, Function, Module
 from griffe.docstrings import numpy as np_parser
 from griffe.docstrings.dataclasses import (
-    DocstringDeprecated,
     DocstringParameter,
     DocstringRaise,
     DocstringReturn,
