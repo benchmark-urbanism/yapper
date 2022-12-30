@@ -35,7 +35,7 @@ def mock_function(param_a: int, param_b: Union[int, float] = 2) -> Optional[Unio
     ValueError
         Raises value error if params are not numbers.
 
-    Notes
+    Examples
     -----
     ```python
     print(mock_function(1, 2))
