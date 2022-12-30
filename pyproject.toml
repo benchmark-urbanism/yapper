@@ -17,13 +17,13 @@ authors = [{ name = "Gareth Simons", email = "info@benchmarkurbanism.com" }]
 maintainers = [{ name = "Gareth Simons", email = "info@benchmarkurbanism.com" }]
 classifiers = ["Programming Language :: Python"]
 dependencies = [
-  "docstring-parser<1.0,>=0.13",
-  "dominate<3.0.0,>=2.6.0",
-  "python-slugify<7.0.0,>=6.1.1",
-  "Markdown<4.0.0,>=3.3.6",
-  "toml>=0.10.2",
+    "docstring-parser<1.0,>=0.13",
+    "dominate<3.0.0,>=2.6.0",
+    "python-slugify<7.0.0,>=6.1.1",
+    "Markdown<4.0.0,>=3.3.6",
+    "toml>=0.10.2",
+    "griffe>=0.25.2",
 ]
-dynamic = ["entry-points"]
 
 [project.scripts]
 yapper = "yapper.cli:parse_cli"
@@ -51,8 +51,8 @@ documentation = "https://github.com/benchmark-urbanism/yapper"
 repository = "https://github.com/benchmark-urbanism/yapper"
 
 [build-system]
-requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
-build-backend = "setuptools.build_meta"
+requires = ["pdm-pep517"]
+build-backend = "pdm.pep517.api"
 
 [tool.setuptools]
 packages = ["yapper"]

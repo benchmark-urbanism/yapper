@@ -12,6 +12,8 @@ from typing import get_type_hints
 
 import docstring_parser
 from dominate import dom_tag, svg, tags, util  # type: ignore
+from griffe.dataclasses import Class, Function
+from griffe.loader import GriffeLoader
 from slugify import slugify
 
 from yapper import YapperConfig
@@ -124,92 +126,54 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
     return fragment
 
 
-def process_class(ast_class: ast.ClassDef, module_content: ModuleType) -> tags.section | None:
+def process_class(module_class: Class) -> tags.section | None:
     """Process a python class."""
-    if ast_class is None:
-        return None
-    logger.info(f"Processing class {ast_class.name}.")
+    logger.info(f"Processing class {module_class.name}.")
     # build class fragment
     class_fragment: tags.section = tags.section(cls="yap class")
-    class_fragment += generate_heading(heading_level="h2", heading_name=ast_class.name, heading_cls="yap class-title")
+    class_fragment += generate_heading(
+        heading_level="h2", heading_name=module_class.name, heading_cls="yap class-title"
+    )
     # class docstring
-    class_doc_str = ast.get_docstring(ast_class)
-    if class_doc_str is not None:
-        class_fragment = add_markdown(fragment=class_fragment, text=class_doc_str)  # type: ignore
+    if module_class.docstring is not None:
+        class_fragment = add_markdown(fragment=class_fragment, text=module_class.docstring.value)  # type: ignore
     # base classes
-    for base in ast_class.bases:
+    for base in module_class.bases:
         with class_fragment:
             base_item = tags.p(cls="yap class-base")
             with base_item:
                 util.text("Inherits from")
                 tags.a(base.id, href=f"#{slugify(base.id)}")  # type: ignore
                 util.text(".")
-    # when the class is passed-in directly its name is captured in the member_name
-    methods: list[ast.FunctionDef] = []
-    props: list[ast.Expr | ast.AnnAssign | ast.FunctionDef] = []
-    for item in ast_class.body:
-        if isinstance(item, ast.AnnAssign):
-            props.append(item)
-        elif isinstance(item, ast.FunctionDef):
-            is_property = False
-            is_setter = False
-            for dec in item.decorator_list:
-                if hasattr(dec, "attr"):
-                    if getattr(dec, "attr") == "setter":
-                        is_setter = True
-                elif isinstance(dec, ast.Name):
-                    if dec.id == "property":
-                        is_property = True
-                elif isinstance(dec, ast.Attribute) and dec.attr == "setter":
-                    logger.warning(f"Skipping setter for {item.name}")
-                else:
-                    raise NotImplementedError(f"Unable to process decorator: {dec}")
-            if is_setter:
-                continue
-            if is_property:
-                props.append(item)
-            else:
-                methods.append(item)
     # process props
-    prop_names: list[str] = []
-    for prop in props:
-        if hasattr(prop, "name"):
-            prop_name: str = prop.name  # type: ignore
-        elif isinstance(prop, ast.AnnAssign):
-            prop_name = prop.target.id  # type: ignore
-        else:
-            raise NotImplementedError(f"Unable to extract property name from: {prop}")
-        if not prop_name.startswith("_"):
-            prop_names.append(prop_name)
-    if prop_names:
+    prop_keys: list[str] = []
+    for prop_key in module_class.attributes.keys():
+        if not prop_key.startswith("_"):
+            prop_keys.append(prop_key)
+    if prop_keys:
         class_fragment = add_heading(doc_str_frag=class_fragment, heading="Properties")  # type: ignore
-    extract_class = getattr(module_content, ast_class.name)
-    class_types = get_type_hints(extract_class)
-    for prop_name in prop_names:
-        prop_type: str = ""
-        if prop_name in class_types:
-            prop_type = class_types[prop_name].__name__
+    for prop_key in prop_keys:
+        prop_val = module_class.attributes[prop_key]
         prop_desc = ""
         with class_fragment:
             tags.div(
                 tags.div(
-                    tags.div(prop_name, cls="yap class-prop-def-name"),
-                    tags.div(prop_type, cls="yap class-prop-def-type"),
+                    tags.div(prop_val.name, cls="yap class-prop-def-name"),
+                    # TODO: tags.div(prop_type, cls="yap class-prop-def-type"),
                     cls="yap class-prop-def",
                 ),
                 tags.div(prop_desc, cls="yap class-prop-def-desc"),
                 cls="yap class-prop-elem-container",
             )
     # process methods
-    if methods:
+    method_keys: list[str] = []
+    for method_key in module_class.functions.keys():
+        if not method_key.startswith("_"):
+            method_keys.append(method_key)
+    if method_keys:
         class_fragment = add_heading(doc_str_frag=class_fragment, heading="Methods")  # type: ignore
-    for method in methods:
-        # extract the class method's content
-        extract_func = getattr(extract_class, method.name)
-        func_types = get_type_hints(extract_func)
-        func_fragment = process_function(
-            ast_function=method, types_dict=func_types, module_content=module_content, class_name=ast_class.name
-        )
+    for method_key in method_keys:
+        func_fragment = process_function(module_class.functions[method_key])
         if func_fragment is not None:
             class_fragment += func_fragment
 
@@ -393,32 +357,30 @@ def process_func_docstring(
 
 
 def process_function(
-    ast_function: ast.FunctionDef | ast.AsyncFunctionDef,
-    types_dict: dict[str, type],
-    module_content: ModuleType,
-    class_name: str | None = None,
+    module_function: Function,
 ) -> tags.section | None:
     """Process a function."""
     # don't process private members
-    if ast_function.name.startswith("_") and not ast_function.name == "__init__":
+    if module_function.name.startswith("_") and not module_function.name == "__init__":
         return None
-    logger.info(f"Processing function: {ast_function.name}")
+    logger.info(f"Processing function: {module_function.name}")
     func_fragment: tags.section = tags.section(cls="yap func")
-    if class_name and ast_function.name == "__init__":
-        heading_name = f"{class_name}.__init__"
-        func_name = class_name
-    elif class_name:
-        heading_name = f"{class_name}.{ast_function.name}"
-        func_name = ast_function.name
+    if func_fragment.parent is not None and func_fragment.name == "__init__":
+        heading_name = f"{func_fragment.parent.name}.__init__"
+        func_name = func_fragment.parent.name
+    elif func_fragment.parent is not None:
+        heading_name = f"{module_function.parent.name}.{module_function.name}"
+        func_name = module_function.name
     else:
-        heading_name = ast_function.name
-        func_name = ast_function.name
+        heading_name = module_function.name
+        func_name = module_function.name
     func_fragment += generate_heading(heading_level="h2", heading_name=heading_name, heading_cls="yap func-title")
     # extract parameters, types, defaults
     sig_param_names: list[str] = []
     sig_param_types: list[str] = []
     sig_param_defaults: list[str | None] = []
     # pad defaults to keep in sync
+    # TODO: not processed below
     pad = len(ast_function.args.args) - len(ast_function.args.defaults)
     for idx, arg in enumerate(ast_function.args.args):
         if arg.arg == "self":
@@ -474,25 +436,25 @@ def process_function(
 def parse(module_name: str, module_content: ModuleType, ast_module: ast.Module, yapper_config: YapperConfig) -> str:
     """Parse a python module."""
     logger.info(f"Parsing module: {module_name}")
+    # TODO: redo plumbing
+    loader = GriffeLoader()
+    module = loader.load_module("tests.comparisons.mock_file")
     # start the DOM fragment
     dom_fragment: tags.div = tags.div(cls="yap module")
-    dom_fragment += generate_heading(heading_level="h1", heading_name=module_name, heading_cls="yap module-title")
+    dom_fragment += generate_heading(heading_level="h1", heading_name=module.name, heading_cls="yap module-title")
     # module docstring
-    module_doc_str = ast.get_docstring(ast_module)
-    if module_doc_str is not None:
-        dom_fragment = add_markdown(fragment=dom_fragment, text=module_doc_str)  # type: ignore
+    if module.docstring is not None:
+        dom_fragment = add_markdown(fragment=dom_fragment, text=module.docstring.value)
     # iterate the module's members
-    for item in ast_module.body:
+    for item_key, item_val in module.members.items():
         # process functions
-        if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            if item.name.startswith("_"):
+        if isinstance(item_val, Function):
+            if item_val.name.startswith("_"):
                 continue
-            extract_func = getattr(module_content, item.name)
-            func_types = get_type_hints(extract_func)
-            dom_fragment += process_function(item, func_types, module_content)
+            dom_fragment += process_function(item_val)
         # process classes and nested methods
-        elif isinstance(item, ast.ClassDef):
-            dom_fragment += process_class(item, module_content)
+        elif isinstance(item_val, Class):
+            dom_fragment += process_class(item_val)
     astro: str = ""
     if yapper_config["intro_template"] is not None:
         for line in yapper_config["intro_template"].split("\n"):
