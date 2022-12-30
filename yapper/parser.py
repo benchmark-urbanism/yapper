@@ -260,7 +260,7 @@ def add_docstr_params(doc_str_frag: tags.div, param_set: docstringContentType) -
         param_anno = param_anno.split(",")
         param_anno = "|".join([pa.strip() for pa in param_anno])
     # only remain tail descriptor
-    if "." in param_anno and not "np." in param_anno or "npt." in param_anno:
+    if "." in param_anno and not ("np." in param_anno or "npt." in param_anno):
         param_anno = param_anno.rsplit(".", maxsplit=1)[-1]
     elem_desc_frag = tags.div(cls="yap doc-str-elem-desc")
     elem_desc_frag = add_markdown(fragment=elem_desc_frag, text=param_set.description)
