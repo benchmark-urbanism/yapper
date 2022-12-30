@@ -4,15 +4,13 @@ Yapper converts Python docstrings to `astro` files for use by the [Astro](https:
 
 It uses [`griffe`](https://github.com/mkdocstrings/griffe) to parse python modules and extracts numpy style docstrings.
 
-It is up to the user to maintain consistency between types specified in signatures and docstrings. Differences betweten the two can be preferable where docstrings represent simplified forms of typing information than might otherwise be necessary for function signatures.
-
 Docstrings and parameter descriptions will be passed through as raw markdown wrapped in Astro `<Markdown is:raw></Markdown>` components.
 
 Class and function elements are wrapped with `html` with `css` classes that can be styled from Astro.
 
 > See the [`cityseer.benchmarkurbanism.com`](https://cityseer.benchmarkurbanism.com) documentation site and associated [docs repo](https://github.com/benchmark-urbanism/cityseer-api/tree/master/docs) for a working example.
 
-Conversion of markdown formatting, code blocks, admonitions, etc., is all handled downstream by Astro. Styling is likewise handled downstream via `css` targeting the associated element classes.
+Conversion of markdown formatting, code blocks, admonitions, etc., is all handled downstream by Astro's remark and rehype plugins. Styling is likewise handled downstream via `css` targeting the associated element classes.
 
 ## Configuration
 
