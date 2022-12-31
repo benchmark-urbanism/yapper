@@ -50,8 +50,8 @@ documentation = "https://github.com/benchmark-urbanism/yapper"
 repository = "https://github.com/benchmark-urbanism/yapper"
 
 [build-system]
-requires = ["pdm-pep517"]
-build-backend = "pdm.pep517.api"
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["yapper"]
