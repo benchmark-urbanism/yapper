@@ -66,7 +66,7 @@ def generate_heading(heading_level: str, heading_name: str, heading_cls: str):
     return h
 
 
-def weld_candidate(text_a: str, text_b: str) -> bool:
+def weld_candidate(text_a: str | None, text_b: str | None) -> bool:
     """Determine whether two strings can be merged into a single line."""
     if text_a is None or text_a == "":
         return False
@@ -81,7 +81,7 @@ def weld_candidate(text_a: str, text_b: str) -> bool:
     return True
 
 
-def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section | tags.div:
+def add_markdown(fragment: tags.section | tags.div, text: str | None) -> tags.section | tags.div:
     """Add a markdown text block."""
     content_str = ""
     if text is not None:
