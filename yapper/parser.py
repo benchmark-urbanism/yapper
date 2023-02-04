@@ -92,6 +92,9 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
     other_block = False
     cleaned_text = ""
     for next_line in splits:
+        # clean out pylint statements
+        if "# pylint: disable=line-too-long" in next_line:
+            next_line = next_line.replace("# pylint: disable=line-too-long", "")
         # code blocks
         if "```" in next_line:
             if code_block is False:
