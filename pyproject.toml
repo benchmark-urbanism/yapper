@@ -1,6 +1,6 @@
 [project]
 name = "yapper"
-version = "0.3.5"
+version = "0.4.0"
 description = "Parser for converting python docstrings to .astro files for the Astro static site generator."
 readme = 'README.md'
 requires-python = ">=3.8,<4.0"
@@ -28,23 +28,35 @@ dynamic = ["entry-points"]
 [project.scripts]
 yapper = "yapper.cli:parse_cli"
 
-[project.optional-dependencies]
+[tool.pdm]
 [tool.pdm.dev-dependencies]
 dev = [
-  "pytest>=7.1.1",
-  "setuptools-scm>=6.4.2",
-  "pylint>=2.13.7",
-  "black>=22.3.0",
-  "isort>=5.10.1",
-  "pydocstyle>=6.1.1",
-  "types-python-slugify>=5.0.4",
-  "types-toml>=0.10.7",
-  "pyright>=1.1.246",
-  "setuptools>=62.3.2",
-  "twine>=4.0.0",
-  "coverage>=6.4.1",
+    "pytest>=7.1.1",
+    "setuptools-scm>=6.4.2",
+    "pylint>=2.13.7",
+    "black>=22.3.0",
+    "isort>=5.10.1",
+    "pydocstyle>=6.1.1",
+    "types-python-slugify>=5.0.4",
+    "types-toml>=0.10.7",
+    "pyright>=1.1.246",
+    "setuptools>=62.3.2",
+    "twine>=4.0.0",
+    "coverage>=6.4.1",
+    "markdown-it-py>=3.0.0",
+    "linkify-it-py>=2.0.2",
+    "mdit-py-plugins>=0.4.0",
 ]
 
+[tool.pdm.scripts]
+formatting = { shell = "black --config=pyproject.toml ./ && isort --settings-file=pyproject.toml ./" }
+linting = "pylint --rcfile=pyproject.toml ./yapper"
+typechecks = "pyright"
+docstyle = "pydocstyle --config=pyproject.toml"
+tests = "pytest ./tests"
+coverage_run = "coverage run -m pytest ./tests"
+coverage_report = { shell = "coverage report --show-missing --skip-empty && coverage lcov" }
+build_project = { shell = "pdm run formatting && pdm run linting && pdm run typechecks && pdm run docstyle && pdm run tests && pdm build" }
 [project.urls]
 homepage = "https://github.com/benchmark-urbanism/yapper"
 documentation = "https://github.com/benchmark-urbanism/yapper"
@@ -82,9 +94,6 @@ max-args = 10
 [tool.pylint.format]
 max-line-length = 120
 
-[tool.pylint.logging]
-
-# https://github.com/microsoft/pyright/blob/main/docs/configuration.md#sample-pyprojecttoml-file
 [tool.pyright]
 pythonVersion = '3.10'
 include = ["yapper"]
@@ -134,12 +143,3 @@ ignore = [
 match = "(?!test_).*\\.py"
 match_dir = "^(?!(__pypackages__|build|tests)).*"
 
-[tool.pdm.scripts]
-formatting = { shell = "black --config=pyproject.toml ./ && isort --settings-file=pyproject.toml ./" }
-linting = "pylint --rcfile=pyproject.toml ./yapper"
-typechecks = "pyright"
-docstyle = "pydocstyle --config=pyproject.toml"
-tests = "pytest ./tests"
-coverage_run = "coverage run -m pytest ./tests"
-coverage_report = { shell = "coverage report --show-missing --skip-empty && coverage lcov" }
-build_project = { shell = "pdm run formatting && pdm run linting && pdm run typechecks && pdm run docstyle && pdm run tests && pdm build" }

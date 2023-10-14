@@ -12,12 +12,17 @@ from typing import get_type_hints
 
 import docstring_parser
 from dominate import dom_tag, svg, tags, util  # type: ignore
+from markdown_it import MarkdownIt
+from mdit_py_plugins.admon import admon_plugin
+from mdit_py_plugins.dollarmath import dollarmath_plugin
 from slugify import slugify
 
 from yapper import YapperConfig
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+md = MarkdownIt("gfm-like", {"breaks": True, "html": True, "linkify": True}).use(dollarmath_plugin).use(admon_plugin)
 
 
 class Markdown(dom_tag.dom_tag):
@@ -118,9 +123,7 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
         raise ValueError(f"Unclosed code block or admonition encountered for content: \n{cleaned_text}")
     cleaned_text += "\n"
     cleaned_text = cleaned_text.replace("\n\n\n", "\n\n")
-    md: Markdown = Markdown(util.raw(cleaned_text))  # type: ignore
-    # add is:raw directive
-    fragment += util.raw(md.render().replace("<Markdown>", "<Markdown is:raw>"))  # type: ignore
+    fragment += util.raw(md.render(cleaned_text))  # type: ignore
     return fragment
 
 

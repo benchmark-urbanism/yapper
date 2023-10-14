@@ -64,9 +64,9 @@ class ParentClass:
     """
     A parent class
 
-    :::warning
+    !!!warning
     An admonition
-    :::
+    !!!
     """
 
     parent_prop: str
@@ -80,9 +80,9 @@ class ParentClass:
         ----------
         a_param: str
             A parameter.
-            :::note
+            !!!note
             Another admonition
-            :::
+            !!!
         """
         self.parent_prop = a_param
 

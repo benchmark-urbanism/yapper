@@ -1,5 +1,4 @@
 ---
-import { Markdown } from 'astro/components';
 ---
 
 <div class="yap module">
@@ -11,9 +10,8 @@ M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4
 " fill-rule="evenodd"></path>
       </svg>
     </a>tests.comparisons.mock_file
-  </h1><Markdown is:raw>
-module docstring content more content
-</Markdown>
+  </h1><p>module docstring content more content</p>
+
   <section class="yap func">
     <h2 class="yap func-title" id="mock-function">
       <a aria-hidden="true" href="#mock-function" tabindex="-1">
@@ -33,31 +31,38 @@ M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4
         </div>
       </div>
     </div>
-    <div class="yap"><Markdown is:raw>
-A mock function returning a sum of param_a and param_b if positive numbers, else None
-</Markdown>
+    <div class="yap"><p>A mock function returning a sum of param_a and param_b if positive numbers, else None</p>
+
       <h3 class="yap">Parameters</h3>
       <div class="yap doc-str-elem-container">
         <div class="yap doc-str-elem-def">
           <div class="yap doc-str-elem-name">param_a</div>
           <div class="yap doc-str-elem-type">int</div>
         </div>
-        <div class="yap doc-str-elem-desc"><Markdown is:raw>
-A *test* _param_.
-</Markdown></div>
+        <div class="yap doc-str-elem-desc"><p>A <em>test</em> <em>param</em>.</p>
+</div>
       </div>
       <div class="yap doc-str-elem-container">
         <div class="yap doc-str-elem-def">
           <div class="yap doc-str-elem-name">param_b</div>
           <div class="yap doc-str-elem-type">float</div>
         </div>
-        <div class="yap doc-str-elem-desc"><Markdown is:raw>
-Another *test* _param_.
-
-| col A |: col B |
-|-------|--------|
-| boo   | baa more content across broken line|
-</Markdown></div>
+        <div class="yap doc-str-elem-desc"><p>Another <em>test</em> <em>param</em>.</p>
+<table>
+<thead>
+<tr>
+<th>col A</th>
+<th>: col B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>boo</td>
+<td>baa more content across broken line</td>
+</tr>
+</tbody>
+</table>
+</div>
       </div>
       <h3 class="yap">Returns</h3>
       <div class="yap doc-str-elem-container">
@@ -65,18 +70,16 @@ Another *test* _param_.
           <div class="yap doc-str-elem-name">summed_number</div>
           <div class="yap doc-str-elem-type">float</div>
         </div>
-        <div class="yap doc-str-elem-desc"><Markdown is:raw>
-The sum of _param_a_ and _param_b_.
-</Markdown></div>
+        <div class="yap doc-str-elem-desc"><p>The sum of <em>param_a</em> and <em>param_b</em>.</p>
+</div>
       </div>
       <div class="yap doc-str-elem-container">
         <div class="yap doc-str-elem-def">
           <div class="yap doc-str-elem-name"></div>
           <div class="yap doc-str-elem-type">None</div>
         </div>
-        <div class="yap doc-str-elem-desc"><Markdown is:raw>
-None returned if values are negative.
-</Markdown></div>
+        <div class="yap doc-str-elem-desc"><p>None returned if values are negative.</p>
+</div>
       </div>
       <h3 class="yap">Raises</h3>
       <div class="yap doc-str-elem-container">
@@ -84,27 +87,32 @@ None returned if values are negative.
           <div class="yap doc-str-elem-name"></div>
           <div class="yap doc-str-elem-type">ValueError</div>
         </div>
-        <div class="yap doc-str-elem-desc"><Markdown is:raw>
-Raises value error if params are not numbers.
-</Markdown></div>
+        <div class="yap doc-str-elem-desc"><p>Raises value error if params are not numbers.</p>
+</div>
       </div>
       <div class="yap doc-str-meta">
-        <h3 class="yap">Notes</h3><Markdown is:raw>
-```python
-print(mock_function(1, 2))
+        <h3 class="yap">Notes</h3><pre><code class="language-python">print(mock_function(1, 2))
 # prints 3
-print("boo")
+print(&quot;boo&quot;)
 print('boo')
-```
+</code></pre>
+<p>Random text</p>
+<p><em>Random table</em></p>
+<table>
+<thead>
+<tr>
+<th>col A</th>
+<th>: col B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>boo</td>
+<td>baa</td>
+</tr>
+</tbody>
+</table>
 
- Random text
-
- _Random table_
-
-| col A |: col B |
-|-------|--------|
-| boo   | baa    |
-</Markdown>
       </div>
     </div>
   </section>
@@ -117,13 +125,12 @@ M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4
 " fill-rule="evenodd"></path>
         </svg>
       </a>ParentClass
-    </h2><Markdown is:raw>
-A parent class
+    </h2><p>A parent class</p>
+<div class="admonition warning">
+<p class="admonition-title">An admonition</p>
+</div>
+<p>!!!</p>
 
-:::warning
-An admonition
-:::
-</Markdown>
     <h3 class="yap">Properties</h3>
     <div class="yap class-prop-elem-container">
       <div class="yap class-prop-def">
@@ -151,21 +158,20 @@ M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4
           </div>
         </div>
       </div>
-      <div class="yap"><Markdown is:raw>
-Parent initialisation.
-</Markdown>
+      <div class="yap"><p>Parent initialisation.</p>
+
         <h3 class="yap">Parameters</h3>
         <div class="yap doc-str-elem-container">
           <div class="yap doc-str-elem-def">
             <div class="yap doc-str-elem-name">a_param</div>
             <div class="yap doc-str-elem-type">str</div>
           </div>
-          <div class="yap doc-str-elem-desc"><Markdown is:raw>
-A parameter.
-:::note
-Another admonition
-:::
-</Markdown></div>
+          <div class="yap doc-str-elem-desc"><p>A parameter.</p>
+<div class="admonition note">
+<p class="admonition-title">Another admonition</p>
+</div>
+<p>!!!</p>
+</div>
         </div>
       </div>
     </section>
@@ -184,9 +190,8 @@ M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4
           <span>no_param()</span>
         </div>
       </div>
-      <div class="yap"><Markdown is:raw>
-No params.
-</Markdown></div>
+      <div class="yap"><p>No params.</p>
+</div>
     </section>
   </section>
   <section class="yap class">
@@ -198,9 +203,8 @@ M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4
 " fill-rule="evenodd"></path>
         </svg>
       </a>ChildClass
-    </h2><Markdown is:raw>
-A child class
-</Markdown>
+    </h2><p>A child class</p>
+
     <p class="yap class-base">Inherits from
       <a href="#parentclass">ParentClass</a>.
     </p>
@@ -232,27 +236,24 @@ M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4
           </div>
         </div>
       </div>
-      <div class="yap"><Markdown is:raw>
-Child initialisation.
-</Markdown>
+      <div class="yap"><p>Child initialisation.</p>
+
         <h3 class="yap">Parameters</h3>
         <div class="yap doc-str-elem-container">
           <div class="yap doc-str-elem-def">
             <div class="yap doc-str-elem-name">param_c</div>
             <div class="yap doc-str-elem-type">float</div>
           </div>
-          <div class="yap doc-str-elem-desc"><Markdown is:raw>
-Yet another test param.
-</Markdown></div>
+          <div class="yap doc-str-elem-desc"><p>Yet another test param.</p>
+</div>
         </div>
         <div class="yap doc-str-elem-container">
           <div class="yap doc-str-elem-def">
             <div class="yap doc-str-elem-name">param_d</div>
             <div class="yap doc-str-elem-type">float</div>
           </div>
-          <div class="yap doc-str-elem-desc"><Markdown is:raw>
-And another.
-</Markdown></div>
+          <div class="yap doc-str-elem-desc"><p>And another.</p>
+</div>
         </div>
       </div>
     </section>
@@ -271,18 +272,16 @@ M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4
           <span>hello()</span>
         </div>
       </div>
-      <div class="yap"><Markdown is:raw>
-A random class method returning "hello"
-</Markdown>
+      <div class="yap"><p>A random class method returning &quot;hello&quot;</p>
+
         <h3 class="yap">Returns</h3>
         <div class="yap doc-str-elem-container">
           <div class="yap doc-str-elem-def">
             <div class="yap doc-str-elem-name">str</div>
             <div class="yap doc-str-elem-type">saying_hello</div>
           </div>
-          <div class="yap doc-str-elem-desc"><Markdown is:raw>
-A string saying "hello"
-</Markdown></div>
+          <div class="yap doc-str-elem-desc"><p>A string saying &quot;hello&quot;</p>
+</div>
         </div>
       </div>
     </section>
