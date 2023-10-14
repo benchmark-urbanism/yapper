@@ -13,8 +13,8 @@ from typing import get_type_hints
 import docstring_parser
 from dominate import dom_tag, svg, tags, util  # type: ignore
 from markdown_it import MarkdownIt
-from mdit_py_plugins.admon import admon_plugin
-from mdit_py_plugins.dollarmath import dollarmath_plugin
+from mdit_py_plugins.admon import admon_plugin  # type: ignore
+from mdit_py_plugins.dollarmath import dollarmath_plugin  # type: ignore
 from slugify import slugify
 
 from yapper import YapperConfig
@@ -62,9 +62,9 @@ def generate_heading(heading_level: str, heading_name: str, heading_cls: str):
 
 def weld_candidate(text_a: str, text_b: str) -> bool:
     """Determine whether two strings can be merged into a single line."""
-    if text_a is None or text_a == "":
+    if not text_a or text_a == "":
         return False
-    if text_b is None or text_b == "":
+    if not text_b or text_b == "":
         return False
     for char in ["|", ">"]:
         if text_a.strip().endswith(char):
@@ -78,7 +78,7 @@ def weld_candidate(text_a: str, text_b: str) -> bool:
 def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section | tags.div:
     """Add a markdown text block."""
     content_str = ""
-    if text is not None:
+    if not text:
         content_str = text.strip()
     splits = content_str.split("\n")
     code_padding = None
@@ -129,7 +129,7 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
 
 def process_class(ast_class: ast.ClassDef, module_content: ModuleType) -> tags.section | None:
     """Process a python class."""
-    if ast_class is None:
+    if not ast_class:
         return None
     logger.info(f"Processing class {ast_class.name}.")
     # build class fragment
@@ -182,8 +182,8 @@ def process_class(ast_class: ast.ClassDef, module_content: ModuleType) -> tags.s
             prop_name = prop.target.id  # type: ignore
         else:
             raise NotImplementedError(f"Unable to extract property name from: {prop}")
-        if not prop_name.startswith("_"):
-            prop_names.append(prop_name)
+        if not prop_name.startswith("_"):  # type: ignore
+            prop_names.append(prop_name)  # type: ignore
     if prop_names:
         class_fragment = add_heading(doc_str_frag=class_fragment, heading="Properties")  # type: ignore
     extract_class = getattr(module_content, ast_class.name)
@@ -254,7 +254,7 @@ def add_heading(doc_str_frag: tags.div | tags.section, heading: str) -> tags.div
 
 def add_param_set(doc_str_frag: tags.div, param_name: str, param_type: str | None, param_description: str) -> tags.div:
     """Add a parameter set."""
-    if param_name is None:
+    if not param_name:
         param_name = ""
     if param_type is None:
         param_type = "None"
@@ -285,7 +285,7 @@ def process_func_docstring(
             if parsed_doc_str.long_description is not None:
                 desc += f"\n{parsed_doc_str.long_description}"
             doc_str_frag = add_markdown(fragment=doc_str_frag, text=desc)  # type: ignore
-        if (sig_param_names and parsed_doc_str.params is None) or (len(sig_param_names) != len(parsed_doc_str.params)):
+        if (sig_param_names and not parsed_doc_str.params) or (len(sig_param_names) != len(parsed_doc_str.params)):
             logger.warning(
                 f"""
             Number of docstring params does not match number of signature params.
@@ -295,7 +295,7 @@ def process_func_docstring(
             Doc string: {doc_str}
             """
             )
-        if parsed_doc_str.params is not None and len(parsed_doc_str.params):
+        if not parsed_doc_str.params and len(parsed_doc_str.params):
             doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Parameters")  # type: ignore
             for param in parsed_doc_str.params:
                 param_name = param.arg_name
@@ -326,7 +326,7 @@ def process_func_docstring(
                 )
         # track types parsed from return docstrings
         return_types_in_docstring: list[str] = []
-        if parsed_doc_str.many_returns is not None and len(parsed_doc_str.many_returns):
+        if not parsed_doc_str.many_returns and len(parsed_doc_str.many_returns):
             doc_str_frag = add_heading(doc_str_frag=doc_str_frag, heading="Returns")  # type: ignore
             for doc_str_return in parsed_doc_str.many_returns:
                 if doc_str_return.type_name in [None, "None"]:
@@ -497,11 +497,11 @@ def parse(module_name: str, module_content: ModuleType, ast_module: ast.Module, 
         elif isinstance(item, ast.ClassDef):
             dom_fragment += process_class(item, module_content)
     astro: str = ""
-    if yapper_config["intro_template"] is not None:
+    if not yapper_config["intro_template"]:
         for line in yapper_config["intro_template"].split("\n"):
             astro += f"{line.strip()}\n"
     astro += dom_fragment.render().strip()  # type: ignore
-    if yapper_config["outro_template"] is not None:
+    if not yapper_config["outro_template"]:
         astro += "\n"
         for line in yapper_config["outro_template"].split("\n"):
             astro += f"{line.strip()}\n"

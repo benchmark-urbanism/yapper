@@ -1,5 +1,7 @@
 # Yapper
 
+> This package is deprecated and is no longer maintained.
+
 Yapper converts Python docstrings to `astro` files for use by the [Astro](https://astro.build/) static site generator.
 
 It uses the `ast` module to parse class and function signatures and uses [`docstring_parser`](https://github.com/rr-/docstring_parser) to parse docstrings, which is compatible with several common docstring styles such as `google` and `numpy`.
