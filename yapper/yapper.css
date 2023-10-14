@@ -1,0 +1,86 @@
+.yap {
+  & p {
+    @apply px-1;
+  }
+
+  & .module {
+    @apply m-3 py-3;
+
+    & .title {
+      @apply pl-2 text-3xl font-medium;
+    }
+  }
+
+  & .class {
+    @apply my-8 border-l-3 border-t-1 border-theme pl-2;
+
+    & .title {
+    }
+
+    & .attr {
+    }
+
+    & .inherited {
+    }
+  }
+
+  & .function {
+    @apply my-4 border-l border-mid-grey bg-dark-grey p-1;
+
+    & .title {
+      @apply pl-2 font-mono text-xl font-normal;
+    }
+
+    & .content {
+      @apply mb-2 text-sm flex items-start border-t-2 border-theme bg-darker-grey p-3 font-mono;
+    }
+
+    & .def,
+    .name {
+      @apply px-0.5;
+    }
+
+    & .multiline {
+      @apply flex-col;
+    }
+
+    & .signature {
+      @apply flex;
+
+      & .param {
+        @apply px-0.5;
+      }
+    }
+  }
+
+  & .docstring {
+    @apply text-sm font-light;
+
+    & .meta {
+    }
+
+    & .container {
+      @apply flex items-start border-t border-mid-grey bg-darker-grey py-1;
+    }
+
+    & .def {
+      @apply flex min-w-[170px] max-w-[230px] flex-col py-1;
+    }
+
+    & .name {
+      @apply px-1 text-xs font-semibold;
+    }
+
+    & .type {
+      @apply px-1 text-xs font-light;
+    }
+
+    & .desc {
+      @apply flex w-full flex-col text-xs font-light;
+
+      & p {
+        @apply text-xs font-light;
+      }
+    }
+  }
+}
