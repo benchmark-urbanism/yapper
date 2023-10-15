@@ -5,12 +5,8 @@ Intended for use with the Astro static site generator where further linting / li
 """
 from __future__ import annotations
 
-import ast
 import logging
-from types import ModuleType
-from typing import get_type_hints
 
-import docstring_parser
 from dominate import dom_tag, svg, tags, util  # type: ignore
 from markdown_it import MarkdownIt
 from mdit_py_plugins.admon import admon_plugin  # type: ignore
@@ -60,7 +56,7 @@ def generate_heading(heading_level: str, heading_name: str, heading_cls: str):
     return h
 
 
-def weld_candidate(text_a: str, text_b: str) -> bool:
+def weld_candidate(text_a: str | None, text_b: str | None) -> bool:
     """Determine whether two strings can be merged into a single line."""
     if not text_a or text_a == "":
         return False
@@ -75,7 +71,7 @@ def weld_candidate(text_a: str, text_b: str) -> bool:
     return True
 
 
-def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section | tags.div:
+def add_markdown(fragment: tags.section | tags.div, text: str | None) -> tags.section | tags.div:
     """Add a markdown text block."""
     content_str = ""
     if not text:
@@ -86,6 +82,9 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
     other_block = False
     cleaned_text = ""
     for next_line in splits:
+        # clean out pylint statements
+        if "# pylint: disable=line-too-long" in next_line:
+            next_line = next_line.replace("# pylint: disable=line-too-long", "")
         # code blocks
         if "```" in next_line:
             if code_block is False:
@@ -127,52 +126,28 @@ def add_markdown(fragment: tags.section | tags.div, text: str) -> tags.section |
     return fragment
 
 
-def process_class(ast_class: ast.ClassDef, module_content: ModuleType) -> tags.section | None:
+def process_class(module_class: Class) -> tags.section | None:
     """Process a python class."""
     if not ast_class:
         return None
     logger.info(f"Processing class {ast_class.name}.")
     # build class fragment
     class_fragment: tags.section = tags.section(cls="yap class")
-    class_fragment += generate_heading(heading_level="h2", heading_name=ast_class.name, heading_cls="yap class-title")
+    class_fragment += generate_heading(
+        heading_level="h2", heading_name=module_class.name, heading_cls="yap class-title"
+    )
     # class docstring
-    class_doc_str = ast.get_docstring(ast_class)
-    if class_doc_str is not None:
-        class_fragment = add_markdown(fragment=class_fragment, text=class_doc_str)  # type: ignore
+    if module_class.docstring is not None:
+        class_fragment = add_markdown(fragment=class_fragment, text=module_class.docstring.value)  # type: ignore
     # base classes
-    for base in ast_class.bases:
+    for base in module_class.bases:
         with class_fragment:
             base_item = tags.p(cls="yap class-base")
             with base_item:
-                util.text("Inherits from")
-                tags.a(base.id, href=f"#{slugify(base.id)}")  # type: ignore
-                util.text(".")
-    # when the class is passed-in directly its name is captured in the member_name
-    methods: list[ast.FunctionDef] = []
-    props: list[ast.Expr | ast.AnnAssign | ast.FunctionDef] = []
-    for item in ast_class.body:
-        if isinstance(item, ast.AnnAssign):
-            props.append(item)
-        elif isinstance(item, ast.FunctionDef):
-            is_property = False
-            is_setter = False
-            for dec in item.decorator_list:
-                if hasattr(dec, "attr"):
-                    if getattr(dec, "attr") == "setter":
-                        is_setter = True
-                elif isinstance(dec, ast.Name):
-                    if dec.id == "property":
-                        is_property = True
-                elif isinstance(dec, ast.Attribute) and dec.attr == "setter":
-                    logger.warning(f"Skipping setter for {item.name}")
-                else:
-                    raise NotImplementedError(f"Unable to process decorator: {dec}")
-            if is_setter:
-                continue
-            if is_property:
-                props.append(item)
-            else:
-                methods.append(item)
+                for base in module_class.bases:
+                    util.text("Inherits from")
+                    tags.a(base.brief, href=f"#{slugify(base.brief)}")  # type: ignore
+                    util.text(".")
     # process props
     prop_names: list[str] = []
     for prop in props:
@@ -186,17 +161,18 @@ def process_class(ast_class: ast.ClassDef, module_content: ModuleType) -> tags.s
             prop_names.append(prop_name)  # type: ignore
     if prop_names:
         class_fragment = add_heading(doc_str_frag=class_fragment, heading="Properties")  # type: ignore
-    extract_class = getattr(module_content, ast_class.name)
-    class_types = get_type_hints(extract_class)
-    for prop_name in prop_names:
-        prop_type: str = ""
-        if prop_name in class_types:
-            prop_type = class_types[prop_name].__name__
+    for prop_key in prop_keys:
+        prop_val = module_class.attributes[prop_key]
+        prop_type = ""
+        if prop_val.annotation is not None and hasattr(prop_val.annotation, "full"):
+            prop_type = prop_val.annotation.full  # type: ignore
         prop_desc = ""
+        if prop_val.docstring is not None:
+            prop_desc = prop_val.docstring.value
         with class_fragment:
             tags.div(
                 tags.div(
-                    tags.div(prop_name, cls="yap class-prop-def-name"),
+                    tags.div(prop_val.name, cls="yap class-prop-def-name"),
                     tags.div(prop_type, cls="yap class-prop-def-type"),
                     cls="yap class-prop-def",
                 ),
@@ -204,26 +180,33 @@ def process_class(ast_class: ast.ClassDef, module_content: ModuleType) -> tags.s
                 cls="yap class-prop-elem-container",
             )
     # process methods
-    if methods:
+    method_keys: list[str] = []
+    for method_key in module_class.functions.keys():
+        if not method_key.startswith("_") or method_key == "__init__":
+            method_keys.append(method_key)
+    if method_keys:
         class_fragment = add_heading(doc_str_frag=class_fragment, heading="Methods")  # type: ignore
-    for method in methods:
-        # extract the class method's content
-        extract_func = getattr(extract_class, method.name)
-        func_types = get_type_hints(extract_func)
-        func_fragment = process_function(
-            ast_function=method, types_dict=func_types, module_content=module_content, class_name=ast_class.name
-        )
-        if func_fragment is not None:
-            class_fragment += func_fragment
+    for method_key in method_keys:
+        func_fragment = process_function(module_class.functions[method_key])
+        class_fragment += func_fragment
 
     return class_fragment
 
 
-def process_signature(func_name: str, param_names: list[str], param_defaults: list[str | None]) -> tags.div:
+def process_signature(module_function: Function) -> tags.div:
     """Process function signature."""
     # process signature
     sig_fragment: tags.div = tags.div(cls="yap func-sig")
-    if not param_names:
+    # use parent class if __init__ method
+    if module_function.name == "__init__":
+        func_name = module_function.parent.name  # type: ignore
+    else:
+        func_name = module_function.name
+    n_params = 0
+    for param in module_function.parameters:
+        if param.name != "self":
+            n_params += 1
+    if n_params == 0:
         with sig_fragment:
             tags.span(f"{func_name}()")
     else:
@@ -231,11 +214,13 @@ def process_signature(func_name: str, param_names: list[str], param_defaults: li
             tags.span(f"{func_name}(")
         # nest sig params for CSS alignment
         sig_params_fragment = tags.div(cls="yap func-sig-params")
-        for idx, (param_name, param_default) in enumerate(zip(param_names, param_defaults)):
-            param_text = f"{param_name}"
-            if param_default is not None:
-                param_text += f"={param_default}"
-            if idx < len(param_names) - 1:
+        for idx, (param) in enumerate(module_function.parameters):
+            if param.name == "self":
+                continue
+            param_text = f"{param.name}"
+            if param.default is not None:
+                param_text += f"={param.default}"
+            if idx < len(module_function.parameters) - 1:
                 param_text += ", "
             else:
                 param_text += ")"
@@ -252,19 +237,22 @@ def add_heading(doc_str_frag: tags.div | tags.section, heading: str) -> tags.div
     return doc_str_frag
 
 
-def add_param_set(doc_str_frag: tags.div, param_name: str, param_type: str | None, param_description: str) -> tags.div:
+docstringContentType = DocstringParameter | DocstringReturn | DocstringRaise | DocstringYield
+
+
+def add_docstr_params(doc_str_frag: tags.div, param_set: docstringContentType) -> tags.div:
     """Add a parameter set."""
     if not param_name:
         param_name = ""
     if param_type is None:
         param_type = "None"
     elem_desc_frag = tags.div(cls="yap doc-str-elem-desc")
-    elem_desc_frag = add_markdown(fragment=elem_desc_frag, text=param_description)
+    elem_desc_frag = add_markdown(fragment=elem_desc_frag, text=param_set.description)
     with doc_str_frag:
         tags.div(
             tags.div(
                 tags.div(param_name, cls="yap doc-str-elem-name"),
-                tags.div(param_type, cls="yap doc-str-elem-type"),
+                tags.div(param_anno, cls="yap doc-str-elem-type"),
                 cls="yap doc-str-elem-def",
             ),
             elem_desc_frag,
@@ -273,9 +261,7 @@ def add_param_set(doc_str_frag: tags.div, param_name: str, param_type: str | Non
     return doc_str_frag
 
 
-def process_func_docstring(
-    doc_str: str | None, sig_param_names: list[str], sig_param_types: list[str], sig_return_type: str
-) -> tags.div:
+def process_func_docstring(module_function: Function) -> tags.div:
     """Process a docstring."""
     doc_str_frag: tags.div = tags.div(cls="yap")
     if doc_str is not None:
@@ -396,106 +382,54 @@ def process_func_docstring(
 
 
 def process_function(
-    ast_function: ast.FunctionDef | ast.AsyncFunctionDef,
-    types_dict: dict[str, type],
-    module_content: ModuleType,
-    class_name: str | None = None,
+    module_function: Function,
 ) -> tags.section | None:
     """Process a function."""
     # don't process private members
-    if ast_function.name.startswith("_") and not ast_function.name == "__init__":
+    if module_function.name.startswith("_") and not module_function.name == "__init__":
         return None
-    logger.info(f"Processing function: {ast_function.name}")
+    logger.info(f"Processing function: {module_function.name}")
     func_fragment: tags.section = tags.section(cls="yap func")
-    if class_name and ast_function.name == "__init__":
-        heading_name = f"{class_name}.__init__"
-        func_name = class_name
-    elif class_name:
-        heading_name = f"{class_name}.{ast_function.name}"
-        func_name = ast_function.name
+    is_method = False
+    if isinstance(module_function.parent, Class):
+        is_method = True
+    if is_method and module_function.name == "__init__":
+        heading_name = f"{module_function.parent.name}.__init__"  # type: ignore
+    elif is_method:
+        heading_name = f"{module_function.parent.name}.{module_function.name}"  # type: ignore
     else:
-        heading_name = ast_function.name
-        func_name = ast_function.name
+        heading_name = module_function.name
     func_fragment += generate_heading(heading_level="h2", heading_name=heading_name, heading_cls="yap func-title")
-    # extract parameters, types, defaults
-    sig_param_names: list[str] = []
-    sig_param_types: list[str] = []
-    sig_param_defaults: list[str | None] = []
-    # pad defaults to keep in sync
-    pad = len(ast_function.args.args) - len(ast_function.args.defaults)
-    for idx, arg in enumerate(ast_function.args.args):
-        if arg.arg == "self":
-            continue
-        sig_param_names.append(arg.arg)
-        if arg.arg in types_dict:
-            if hasattr(types_dict[arg.arg], "__name__"):
-                sig_param_types.append(types_dict[arg.arg].__name__)
-            else:
-                sig_param_types.append(str(types_dict[arg.arg]))
-        else:
-            sig_param_types.append("")
-        if idx < pad:
-            sig_param_defaults.append(None)
-        else:
-            def_val = ast_function.args.defaults[idx - pad]
-            if isinstance(def_val, ast.Constant):
-                sig_param_defaults.append(getattr(def_val, "value"))
-            elif isinstance(def_val, ast.Name):
-                # try to find name / var as global
-                if hasattr(module_content, def_val.id):
-                    global_val = getattr(module_content, def_val.id)
-                    sig_param_defaults.append(global_val)
-                else:
-                    sig_param_defaults.append(def_val.id)
-    if hasattr(ast_function.args, "kwarg") and ast_function.args.kwarg is not None:
-        sig_param_names.append("**kwargs")
-        sig_param_types.append("")
-        sig_param_defaults.append(None)
     # process signature
     with func_fragment:
-        tags.div(cls="yap func-sig-content").appendChild(  # type: ignore
-            process_signature(func_name=func_name, param_names=sig_param_names, param_defaults=sig_param_defaults)
-        )
-    # extract return types
-    return_type: str = ""
-    if "return" in types_dict:
-        return_type = str(types_dict["return"])
+        tags.div(cls="yap func-sig-content").appendChild(process_signature(module_function))  # type: ignore
     # process docstring
-    doc_str = ast.get_docstring(ast_function)
-    func_fragment.appendChild(  # type: ignore
-        process_func_docstring(
-            doc_str=doc_str,
-            sig_param_names=sig_param_names,
-            sig_param_types=sig_param_types,
-            sig_return_type=return_type,
-        )
-    )
+    func_fragment.appendChild(process_func_docstring(module_function))  # type: ignore
 
     return func_fragment
 
 
-def parse(module_name: str, module_content: ModuleType, ast_module: ast.Module, yapper_config: YapperConfig) -> str:
+def parse(module_content: Module, yapper_config: YapperConfig) -> str:
     """Parse a python module."""
-    logger.info(f"Parsing module: {module_name}")
+    logger.info(f"Parsing module: {module_content.canonical_path}")
     # start the DOM fragment
     dom_fragment: tags.div = tags.div(cls="yap module")
-    dom_fragment += generate_heading(heading_level="h1", heading_name=module_name, heading_cls="yap module-title")
+    dom_fragment += generate_heading(
+        heading_level="h1", heading_name=module_content.canonical_path, heading_cls="yap module-title"
+    )
     # module docstring
-    module_doc_str = ast.get_docstring(ast_module)
-    if module_doc_str is not None:
-        dom_fragment = add_markdown(fragment=dom_fragment, text=module_doc_str)  # type: ignore
+    if module_content.docstring is not None:
+        dom_fragment = add_markdown(fragment=dom_fragment, text=module_content.docstring.value)  # type: ignore
     # iterate the module's members
-    for item in ast_module.body:
+    for member in module_content.members.values():
         # process functions
-        if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            if item.name.startswith("_"):
+        if isinstance(member, Function):
+            if member.name.startswith("_"):
                 continue
-            extract_func = getattr(module_content, item.name)
-            func_types = get_type_hints(extract_func)
-            dom_fragment += process_function(item, func_types, module_content)
+            dom_fragment += process_function(member)
         # process classes and nested methods
-        elif isinstance(item, ast.ClassDef):
-            dom_fragment += process_class(item, module_content)
+        elif isinstance(member, Class):
+            dom_fragment += process_class(member)
     astro: str = ""
     if not yapper_config["intro_template"]:
         for line in yapper_config["intro_template"].split("\n"):

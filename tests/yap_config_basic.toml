@@ -6,5 +6,5 @@ intro_template = """
 """
 outro_template = ""
 module_map = [
-  { module = "tests.comparisons.mock_file", py = "./tests/comparisons/mock_file.py", astro = "./tests/comparisons/mock_default.astro" },
+  { module = "tests.comparisons.mock_file", astro = "./tests/comparisons/mock_default.astro" },
 ]

@@ -9,7 +9,7 @@ GLOBAL_VAR = 0.9
 
 def mock_function(param_a: int, param_b: Union[int, float] = 2) -> Optional[Union[int, float]]:
     """
-    A mock function returning a sum of param_a and param_b if positive numbers, else None
+    A mock function returning a sum of param_a and param_b if positive numbers, else None # pylint: disable=line-too-long
 
     Parameters
     ----------
@@ -35,7 +35,7 @@ def mock_function(param_a: int, param_b: Union[int, float] = 2) -> Optional[Unio
     ValueError
         Raises value error if params are not numbers.
 
-    Notes
+    Examples
     -----
     ```python
     print(mock_function(1, 2))

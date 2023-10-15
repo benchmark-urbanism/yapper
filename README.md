@@ -4,7 +4,7 @@
 
 Yapper converts Python docstrings to `astro` files for use by the [Astro](https://astro.build/) static site generator.
 
-It uses the `ast` module to parse class and function signatures and uses [`docstring_parser`](https://github.com/rr-/docstring_parser) to parse docstrings, which is compatible with several common docstring styles such as `google` and `numpy`.
+It uses [`griffe`](https://github.com/mkdocstrings/griffe) to parse python modules and extracts numpy style docstrings.
 
 Types will be inferred from docstrings. Warnings will be logged if types specified in docstrings don't match those specified in function signatures.
 
@@ -33,7 +33,7 @@ intro_template = """
 """
 outro_template = ""
 module_map = [
-  { module = "test.mock_file", py = "./tests/mock_file.py", astro = "./tests/mock_default.astro" },
+  { module = "test.mock_file", astro = "./tests/mock_default.astro" },
 ]
 ```
 
@@ -57,10 +57,10 @@ module_map = [
 ]
 ```
 
-The `module_map` is mandatory and specifies the names of the python modules to be processed via the `module` key, the `py` key mapping to the input file, and an `astro` key corresponding to the output file:
+The `module_map` is mandatory and specifies the names of the python modules to be processed via the `module` key and an `astro` key corresponding to the output file:
 
 ## Development
 
-`yapper` uses a `pyprojct.toml` file to specify project dependencies and scripts related to project development and publishing.
+`yapper` uses a `pyproject.toml` file to specify project dependencies and scripts related to project development and publishing.
 
 See `pyproject.toml` for available scripts.

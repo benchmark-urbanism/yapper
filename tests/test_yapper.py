@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import ast
 import copy
-import importlib
 from pathlib import Path
 
 import pytest
 import toml
+from griffe.loader import GriffeLoader
 
 from yapper import cli, handler, parser
 
@@ -55,44 +54,34 @@ def test_process_config():
         handler.process_config({"module_map": [None]})
     # should raise if missing keys
     with pytest.raises(KeyError):
-        handler.process_config({"module_map": [{"boo": "some.module", "py": "boo.py", "astro": "baa.astro"}]})
+        handler.process_config({"module_map": [{"boo": "some.module", "astro": "baa.astro"}]})
     with pytest.raises(KeyError):
-        handler.process_config({"module_map": [{"module": "some.module", "boo": "boo.py", "astro": "baa.astro"}]})
-    with pytest.raises(KeyError):
-        handler.process_config({"module_map": [{"module": "some.module", "py": "boo.py", "boo": "baa.astro"}]})
-    # should raise if py and astro files aren't strings with correct endings
+        handler.process_config({"module_map": [{"module": "some.module", "boo": "baa.astro"}]})
+    # should raise if astro file isn't string with correct endings
     with pytest.raises(ValueError):
-        handler.process_config({"module_map": [{"module": "some.module", "py": "boo", "astro": "baa.astro"}]})
-    with pytest.raises(ValueError):
-        handler.process_config({"module_map": [{"module": "some.module", "py": "boo.py", "astro": "baa"}]})
+        handler.process_config({"module_map": [{"module": "some.module", "astro": "baa.html"}]})
     # should raise if invalid key provided
     with pytest.raises(KeyError):
-        handler.process_config(
-            {"boo": "baa", "module_map": [{"module": "some.module", "py": "boo.py", "astro": "baa.astro"}]}
-        )
+        handler.process_config({"boo": "baa", "module_map": [{"module": "some.module", "astro": "baa.astro"}]})
     # should replace default keys with custom keys
     # use deep copies
     for k in ["package_root_relative_path", "intro_template", "outro_template"]:
         yapper_config = copy.deepcopy(yapper_clean_config)
         yapper_config[k] = "boo"
-        yapper_config["module_map"] = [{"module": "some.module", "py": "boo.py", "astro": "baa.astro"}]
+        yapper_config["module_map"] = [{"module": "some.module", "astro": "baa.astro"}]
         merged_config = handler.process_config(yapper_config)
         assert merged_config[k] == "boo"
 
 
 def test_parse():
-    file_path = Path("./tests/comparisons/mock_file.py")
-    mock_file = open(file_path)
-    ast_module = ast.parse(mock_file.read())
     # using the basic config
     args_basic = cli.arg_parser.parse_args(["--config", "./tests/yap_config_basic.toml"])
     yapper_config_basic = handler.load_config(args_basic)
     yapper_config_basic = handler.process_config(yapper_config_basic)
-    module_content = importlib.import_module("tests.comparisons.mock_file")
+    griffe_loader = GriffeLoader()
+    module_content = griffe_loader.load_module("tests.comparisons.mock_file")
     astro = parser.parse(
-        module_name="tests.comparisons.mock_file",
         module_content=module_content,
-        ast_module=ast_module,
         yapper_config=yapper_config_basic,
     )
     with open("./tests/comparisons/generated_default.html", mode="w") as out_file:
@@ -104,11 +93,10 @@ def test_parse():
     args_custom = cli.arg_parser.parse_args(["--config", "./tests/yap_config_custom.toml"])
     yapper_config_custom = handler.load_config(args_custom)
     yapper_config_custom = handler.process_config(yapper_config_custom)
-    module_content = importlib.import_module("tests.comparisons.mock_file")
+    griffe_loader = GriffeLoader()
+    module_content = griffe_loader.load_module("tests.comparisons.mock_file")
     astro = parser.parse(
-        module_name="tests.comparisons.mock_file",
         module_content=module_content,
-        ast_module=ast_module,
         yapper_config=yapper_config_custom,
     )
     with open("./tests/comparisons/generated_custom.html", mode="w") as out_file:
